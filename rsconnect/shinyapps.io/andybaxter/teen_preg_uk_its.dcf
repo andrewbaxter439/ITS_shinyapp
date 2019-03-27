@@ -1,10 +1,12 @@
-name: teen_preg_uk_its
-title:
+name: Teen_preg_UK_ITS
+title: Teen_preg_UK_ITS
 username:
 account: andybaxter
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 818876
-bundleId: 1969189
+bundleId: 1969332
 url: https://andybaxter.shinyapps.io/teen_preg_uk_its/
-when: 1553717738.46602
+when: 1553723012.38643
+asMultiple: FALSE
+asStatic: FALSE

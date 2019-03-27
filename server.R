@@ -3,6 +3,7 @@ library(readxl)
 library(broom)
 library(nlme)
 library(car)
+library(svglite)
 
 
 # Setup data and functions -----------------------------------------------------------------------------------
@@ -11,11 +12,11 @@ library(car)
 
 testAutocorr <- function(model, data=NULL, max.lag = 10, time.points = 25) {
   data <- eval(model$call$data)  # Only works if 'lm' call has dataframe named in bracket
-  print(dwt(model, max.lag = max.lag, alternative = "two.sided"))
+  # print(dwt(model, max.lag = max.lag, alternative = "two.sided"))
   par(cex = 0.7, mai = c(0.1, 0.1, 0.2, 0.1))
   par(fig = c(0.03, 1, 0.8, 1))
   plot(
-    data$Time[1:time.points],
+    data$Year[1:time.points],
     residuals(model)[1:time.points],
     type = 'o',
     pch = 16,
@@ -57,6 +58,38 @@ server <- function(input, output) {
     content = function(file) {ggsave(file, PlotInput(), dpi = 500, units = "mm", width = input$width, height = input$height)},
     contentType = paste0("image/", input$format)
   )
+
+# autocorr tests ---------------------------------------------------------------------------------------------
+
+  
+  output$dwt <- renderDataTable(
+    (
+    data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
+       ),
+    options = list(searching = FALSE, paging = FALSE)
+  )
+  
+  output$autocorr <- renderPlot({
+    rows <- maxYr()-minYr()+1
+    par(cex = 0.7, mai = c(0.1, 0.1, 0.2, 0.1))
+    par(fig = c(0.03, 1, 0.8, 1))
+    plot(
+      dfc()$Year[1:rows],
+      residuals(modelGls())[1:rows],
+      type = 'o',
+      pch = 16,
+      col = "red"
+    )
+    
+    par(fig = c(0.03, 0.5, 0.05, 0.75), new = TRUE)
+    acf(residuals(modelGls()))
+    
+    par(fig = c(0.55, 1, 0.05, 0.75), new = TRUE)
+    acf(residuals(modelGls()), type = 'partial')
+  })
+
+# reactive sliders -------------------------------------------------------------------------------------------
+
   
   output$dateslider <- renderUI({
     sliderInput(
@@ -221,6 +254,36 @@ server <- function(input, output) {
         )}
   })
   
+  modelGls <- reactive({  # add if statements for each model
+    if (input$int1 & input$int2) {
+      lm(
+        Value ~ Year +
+          England +
+          Year_Eng +
+          Cat1 +
+          Trend1 +
+          Cat1_Eng +
+          Trend1_Eng +
+          Cat2 +
+          Trend2 +
+          Cat2_Eng +
+          Trend2_Eng,
+        data = dfc()
+      )} else if (input$int1) {
+        lm(
+          Value ~ Year +
+            England +
+            Year_Eng +
+            Cat1 +
+            Trend1 +
+            Cat1_Eng +
+            Trend1_Eng,
+          data = dfc()
+        )}
+  })
+  
+  
+  
   output$modelsummary <- renderDataTable(
     printCoefficients(modelGls_null()), options = list(searching = FALSE, paging = FALSE)
   )
@@ -376,6 +439,3 @@ server <- function(input, output) {
         aesthetics = c("colour", "fill"))
   })
 }
-
-
-shinyApp(ui, server)
