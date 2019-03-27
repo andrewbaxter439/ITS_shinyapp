@@ -83,7 +83,7 @@ ui <- fluidPage(
       h4("Download Graph"),
       column(4, numericInput("width", "Width (mm)", 200)),
       column(4, numericInput("height", "Height (mm)", 150)),
-      column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "svg")),
+      column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
       downloadButton("dlgraph")
       ),
     mainPanel(
@@ -110,8 +110,9 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   output$dlgraph <- downloadHandler(
-    filename = function() { paste0("ITS controlled.", input$format) },
-    content = function(file) {ggsave(file, PlotInput(), device = input$format, dpi = 500, units = "mm", width = input$width, height = input$height)}
+    filename = function() {paste0("ITS controlled.", input$format)},
+    content = function(file) {ggsave(file, PlotInput(), dpi = 500, units = "mm", width = input$width, height = input$height)},
+    contentType = paste0("image/", input$format)
   )
   
   output$dateslider <- renderUI({
@@ -240,9 +241,10 @@ server <- function(input, output) {
       geom_point() + geom_smooth(method = "lm", se = FALSE)
   })
   
-  output$dataframesumm <- renderDataTable({
-    arrange(dfc(), by=Year)
-  })
+  output$dataframesumm <- renderDataTable(
+    (arrange(dfc(), by=Year)),
+    options = list(searching = FALSE)
+  )
   
   modelGls_null <- reactive({  # add if statements for each model
     if (input$int1 & input$int2) {
@@ -276,9 +278,9 @@ server <- function(input, output) {
         )}
   })
   
-  output$modelsummary <- renderDataTable({
-    printCoefficients(modelGls_null())
-  })
+  output$modelsummary <- renderDataTable(
+    printCoefficients(modelGls_null()), options = list(searching = FALSE, paging = FALSE)
+  )
   
   # Create cfac -----
   
@@ -414,7 +416,8 @@ server <- function(input, output) {
       ) +
       # Display parameters
       theme(panel.background = element_blank(),
-            legend.key  = element_blank()) +
+            legend.key  = element_blank(),
+            panel.grid = element_blank()) +
       ylab("Rate of pregnancies to under-18s, per 1,000") +
       xlab("Year") +
       coord_cartesian(ylim = ylim()) +

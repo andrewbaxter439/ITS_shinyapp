@@ -29,7 +29,7 @@ ui <- fluidPage(
       h4("Download Graph"),
       column(4, numericInput("width", "Width (mm)", 200)),
       column(4, numericInput("height", "Height (mm)", 150)),
-      column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "svg")),
+      column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
       downloadButton("dlgraph")
     ),
     mainPanel(
