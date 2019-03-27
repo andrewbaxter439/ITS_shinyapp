@@ -79,23 +79,25 @@ ui <- fluidPage(
       checkboxInput(inputId = "pi1",
                     label = "Phase-in",
                     value = FALSE),
-      uiOutput("piyr1slider")
- #     p("Download graph")#,
-      # column(6, numericInput("width", "Width (px)", value = 800)),
-      # column(6, numericInput("height", "Height (px)", value = 600)),
-      # column(4, radioButtons("type", label = "", choices = c("png", "svg"), selected = "png")),
-      # column(8, br(), downloadButton("dlgraph"))
-    ),
+      uiOutput("piyr1slider"),
+      h4("Download Graph"),
+      column(4, numericInput("width", "Width (mm)", 200)),
+      column(4, numericInput("height", "Height (mm)", 150)),
+      column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "svg")),
+      downloadButton("dlgraph")
+      ),
     mainPanel(
       tabsetPanel(type = "tabs",
                   tabPanel("Full Plot",
-                           h3(textOutput(outputId = "minmax")),
+                          h3(textOutput(outputId = "minmax")),
                            plotOutput(outputId = "modelplot"),
                            dataTableOutput(outputId = "modelsummary")),
-                  #  tabPanel("testing objects",
-                  #           plotOutput(outputId = "modelplotsimple"),
-                  #           dataTableOutput((outputId = "cfac"))),
-                  tabPanel("Final model", dataTableOutput(outputId = "modelsummary")),
+                  # tabPanel("testing objects",
+                  #          h1(textOutput(outputId = "test")),
+                  #          dataTableOutput(outputId = "fulldata"),
+                  #                     plotOutput(outputId = "modelplotsimple"),
+                  #                     dataTableOutput((outputId = "cfac"))
+                  # ),
                   tabPanel("Dataframe for model", dataTableOutput(outputId = "dataframesumm"))
       )
     )
@@ -105,9 +107,12 @@ ui <- fluidPage(
 #** Server ----
 
 
-
-
 server <- function(input, output) {
+  
+  output$dlgraph <- downloadHandler(
+    filename = function() { paste0("ITS controlled.", input$format) },
+    content = function(file) {ggsave(file, PlotInput(), device = input$format, dpi = 500, units = "mm", width = input$width, height = input$height)}
+  )
   
   output$dateslider <- renderUI({
     sliderInput(
@@ -152,9 +157,8 @@ server <- function(input, output) {
                 value = input$int1yr+1)
   })
   
-  all.UK.rates <-
-    reactive({read_xlsx("Conception rates by age and country.xlsx", sheet = paste(input$ages))})
-  
+  all.UK.rates <- reactive({read_xlsx("Conception rates by age and country.xlsx", sheet = paste(input$ages))})
+  output$fulldata <- renderDataTable(all.UK.rates())
   
   dfa <- reactive({
     all.UK.rates() %>% filter(Country == input$main |
@@ -334,6 +338,10 @@ server <- function(input, output) {
   # Output plot ----
   
   output$modelplot <- renderPlot({
+    print(PlotInput())
+    })
+  
+  PlotInput <- reactive({
     dfd() %>% 
       mutate(Predict = predict(modelGls_null())) %>%  # Add Predicts for non-England
       ggplot(aes(
