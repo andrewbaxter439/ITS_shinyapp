@@ -1,9 +1,17 @@
-library(tidyverse)
-library(readxl)
-library(broom)
-library(nlme)
-library(car)
-library(svglite)
+list.of.packages <- c("tidyverse", "readxl", "broom", "nlme", "car", "svglite")
+
+#checking missing packages from list
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+
+#install missing ones
+if(length(new.packages)) install.packages(new.packages, dependencies = TRUE)
+
+require(tidyverse)
+require(readxl)
+require(broom)
+require(nlme)
+require(car)
+require(svglite)
 
 
 # Setup data and functions -----------------------------------------------------------------------------------
@@ -54,7 +62,8 @@ printCoefficients <- function(model){
 server <- function(input, output) {
   
   output$dlgraph <- downloadHandler(
-    filename = function() {paste0("ITS controlled.", input$format)},
+ #   filename = function() {paste0("ITS controlled.", input$format)},
+    filename = function() {paste0(input$main, " ", minYr(), "-", maxYr(), ".", input$format)},
     content = function(file) {ggsave(file, PlotInput(), dpi = 500, units = "mm", width = input$width, height = input$height)},
     contentType = paste0("image/", input$format)
   )
@@ -180,15 +189,11 @@ server <- function(input, output) {
   
   
   dfb <- reactive({
-    if (input$int1) {
       dfaPI() %>% 
         mutate(Cat1 = ifelse(Year < input$int1yr, 0, 1),
                Trend1 = ifelse(Cat1 == 0, 0, Year - startYr() + 1)
         ) %>%
         mutate_at(., colnames(.)[6:7], list(Eng = ~ .*England)) 
-    } else {
-      dfa()
-    }
   })
   
   dfc <- reactive({
@@ -223,7 +228,7 @@ server <- function(input, output) {
   )
   
   modelGls_null <- reactive({  # add if statements for each model
-    if (input$int1 & input$int2) {
+    if (input$int2) {
       gls(
         Value ~ Year +
           England +
@@ -239,7 +244,7 @@ server <- function(input, output) {
         data = dfc(),
         correlation = NULL,
         method = "ML"
-      )} else if (input$int1) {
+      )} else {
         gls(
           Value ~ Year +
             England +
@@ -255,7 +260,7 @@ server <- function(input, output) {
   })
   
   modelGls <- reactive({  # add if statements for each model
-    if (input$int1 & input$int2) {
+    if (input$int2) {
       lm(
         Value ~ Year +
           England +
@@ -269,7 +274,7 @@ server <- function(input, output) {
           Cat2_Eng +
           Trend2_Eng,
         data = dfc()
-      )} else if (input$int1) {
+      )} else {
         lm(
           Value ~ Year +
             England +
