@@ -1,4 +1,7 @@
 ui <- fluidPage(
+  theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
+#  theme = shinythemes::shinytheme(theme = "yeti"),
+  titlePanel("ITS analyses of England's Teenage Pregnancy Strategy"),
   sidebarLayout(
     sidebarPanel(
       selectInput(inputId = "ages",
@@ -14,9 +17,9 @@ ui <- fluidPage(
                   choices = c("Scotland", "England", "Wales", "England and Wales"),
                   selected = "Scotland"),
       uiOutput("dateslider"),
-      checkboxInput(inputId = "int1",
-                    label = "Intervention 1",
-                    value = TRUE),
+      # checkboxInput(inputId = "int1",
+      #               label = "Intervention 1",
+      #               value = TRUE),
       uiOutput("intyr1slider"),
       checkboxInput(inputId = "int2",
                     label = "Intervention 2",
