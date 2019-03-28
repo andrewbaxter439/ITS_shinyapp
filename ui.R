@@ -39,7 +39,7 @@ ui <- fluidPage(
                   tabPanel("Full Plot",
                            h3(textOutput(outputId = "minmax")),
                            plotOutput(outputId = "modelplot"),
-                           checkboxInput("ribbons", "Show confidence intervals", value = TRUE),
+                           checkboxInput("ribbons", "Show confidence intervals", value = FALSE),
                            dataTableOutput(outputId = "modelsummary")
                            ),
                   # tabPanel("testing objects",
