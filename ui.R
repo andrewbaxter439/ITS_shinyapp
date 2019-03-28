@@ -1,6 +1,5 @@
 ui <- fluidPage(
   theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
-#  theme = shinythemes::shinytheme(theme = "yeti"),
   titlePanel("ITS analyses of England's Teenage Pregnancy Strategy"),
   sidebarLayout(
     sidebarPanel(
@@ -40,7 +39,9 @@ ui <- fluidPage(
                   tabPanel("Full Plot",
                            h3(textOutput(outputId = "minmax")),
                            plotOutput(outputId = "modelplot"),
-                           dataTableOutput(outputId = "modelsummary")),
+                           checkboxInput("ribbons", "Show confidence intervals", value = TRUE),
+                           dataTableOutput(outputId = "modelsummary")
+                           ),
                   # tabPanel("testing objects",
                   #          h1(textOutput(outputId = "test")),
                   #          dataTableOutput(outputId = "fulldata"),

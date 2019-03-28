@@ -61,12 +61,6 @@ printCoefficients <- function(model){
 
 server <- function(input, output) {
   
-  output$dlgraph <- downloadHandler(
- #   filename = function() {paste0("ITS controlled.", input$format)},
-    filename = function() {paste0(input$main, " ", minYr(), "-", maxYr(), ".", input$format)},
-    content = function(file) {ggsave(file, PlotInput(), dpi = 500, units = "mm", width = input$width, height = input$height)},
-    contentType = paste0("image/", input$format)
-  )
 
 # autocorr tests ---------------------------------------------------------------------------------------------
 
@@ -97,8 +91,14 @@ server <- function(input, output) {
     acf(residuals(modelGls()), type = 'partial')
   })
 
-# reactive sliders -------------------------------------------------------------------------------------------
+# Reactive inputs -------------------------------------------------------------------------------------------
 
+  output$dlgraph <- downloadHandler(
+    #   filename = function() {paste0("ITS controlled.", input$format)},
+    filename = function() {paste0(input$main, " ", minYr(), "-", maxYr(), ".", input$format)},
+    content = function(file) {ggsave(file, PlotInput(), dpi = 500, units = "mm", width = input$width, height = input$height)},
+    contentType = paste0("image/", input$format)
+  )
   
   output$dateslider <- renderUI({
     sliderInput(
@@ -389,7 +389,7 @@ server <- function(input, output) {
           ymax=HiCI,
           group = Cat2,
           col=NULL,
-          fill="Control"
+          fill= ifelse(input$ribbons,"Control","#00000000")
         ),
         alpha=0.5,
         size = 1,
@@ -404,9 +404,9 @@ server <- function(input, output) {
           ymin = lowCI,
           ymax=HiCI,
           col=NULL,
-          fill=Country
+          fill= ifelse(input$ribbons,Country,"#00000000")
         ),
-        alpha=0.5,
+        alpha= 0.5,
         size = 1,
         show.legend = FALSE) +
       # Intervention time points
