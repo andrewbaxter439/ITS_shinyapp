@@ -62,35 +62,6 @@ printCoefficients <- function(model){
 server <- function(input, output) {
   
 
-# autocorr tests ---------------------------------------------------------------------------------------------
-
-  
-  output$dwt <- renderDataTable(
-    (
-    data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
-       ),
-    options = list(searching = FALSE, paging = FALSE)
-  )
-  
-  output$autocorr <- renderPlot({
-    rows <- maxYr()-minYr()+1
-    par(cex = 0.7, mai = c(0.1, 0.1, 0.2, 0.1))
-    par(fig = c(0.03, 1, 0.8, 1))
-    plot(
-      dfc()$Year[1:rows],
-      residuals(modelGls())[1:rows],
-      type = 'o',
-      pch = 16,
-      col = "red"
-    )
-    
-    par(fig = c(0.03, 0.5, 0.05, 0.75), new = TRUE)
-    acf(residuals(modelGls()))
-    
-    par(fig = c(0.55, 1, 0.05, 0.75), new = TRUE)
-    acf(residuals(modelGls()), type = 'partial')
-  })
-
 # Reactive inputs -------------------------------------------------------------------------------------------
 
   output$dlgraph <- downloadHandler(
@@ -143,6 +114,11 @@ server <- function(input, output) {
                 value = input$int1yr+1)
   })
   
+
+# Dataframe setup --------------------------------------------------------------------------------------------
+
+  
+  
   all.UK.rates <- reactive({read_xlsx("Conception rates by age and country.xlsx", sheet = paste(input$ages))})
   output$fulldata <- renderDataTable(all.UK.rates())
   
@@ -153,8 +129,10 @@ server <- function(input, output) {
       filter(!is.na(Value)) %>%
       arrange(Country) %>%
       mutate(
-        England = ifelse(Country == input$main, 1, 0),
-        Year = as.numeric(Year)) %>% 
+        Year = as.numeric(Year),
+        # Time = Year - min(Year) + 1,
+        England = ifelse(Country == input$main, 1, 0)
+        ) %>% 
       mutate(Year_Eng = Year*England)
   })
   
@@ -443,4 +421,35 @@ server <- function(input, output) {
                    "Control" = "#F7D917"),
         aesthetics = c("colour", "fill"))
   })
+  
+  # autocorr tests ---------------------------------------------------------------------------------------------
+
+  
+  output$dwt <- renderDataTable(
+    (
+    data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
+       ),
+    options = list(searching = FALSE, paging = FALSE)
+  )
+  
+  output$autocorr <- renderPlot({
+    rows <- maxYr()-minYr()+1
+    par(cex = 0.7, mai = c(0.1, 0.1, 0.2, 0.1))
+    par(fig = c(0.03, 1, 0.8, 1))
+    plot(
+      dfc()$Year[1:rows],
+      residuals(modelGls())[1:rows],
+      type = 'o',
+      pch = 16,
+      col = "red"
+    )
+    
+    par(fig = c(0.03, 0.5, 0.05, 0.75), new = TRUE)
+    acf(residuals(modelGls()))
+    
+    par(fig = c(0.55, 1, 0.05, 0.75), new = TRUE)
+    acf(residuals(modelGls()), type = 'partial')
+  })
+
+
 }
