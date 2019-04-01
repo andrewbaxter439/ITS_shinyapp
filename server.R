@@ -279,33 +279,33 @@ server <- function(input, output) {
     }
   })
   
-  # modelGls <- reactive({  # add if statements for each model
-  #   if (input$int2) {
-  #     lm(
-  #       Value ~ Year +
-  #         England +
-  #         Year_Eng +
-  #         Cat1 +
-  #         Trend1 +
-  #         Cat1_Eng +
-  #         Trend1_Eng +
-  #         Cat2 +
-  #         Trend2 +
-  #         Cat2_Eng +
-  #         Trend2_Eng,
-  #       data = dfc()
-  #     )} else {
-  #       lm(
-  #         Value ~ Year +
-  #           England +
-  #           Year_Eng +
-  #           Cat1 +
-  #           Trend1 +
-  #           Cat1_Eng +
-  #           Trend1_Eng,
-  #         data = dfc()
-  #       )}
-  # })
+  modelGls <- reactive({  # model to check for autocorrelation
+    if (input$int2) {
+      lm(
+        Value ~ Year +
+          England +
+          Year_Eng +
+          Cat1 +
+          Trend1 +
+          Cat1_Eng +
+          Trend1_Eng +
+          Cat2 +
+          Trend2 +
+          Cat2_Eng +
+          Trend2_Eng,
+        data = dfc()
+      )} else {
+        lm(
+          Value ~ Year +
+            England +
+            Year_Eng +
+            Cat1 +
+            Trend1 +
+            Cat1_Eng +
+            Trend1_Eng,
+          data = dfc()
+        )}
+  })
   
   
   
@@ -313,7 +313,7 @@ server <- function(input, output) {
     printCoefficients(modelGls_null()), options = list(searching = FALSE, paging = FALSE)
   )
   
-  # Create cfac -----
+  # Create cfac --------------------------------------------------------
   
   modcfac_base <- reactive({
     if(input$int2) {
@@ -350,11 +350,11 @@ server <- function(input, output) {
     }
   })
   
-  ###Tricky bits here
+
   modcfac <- reactive({
     left_join(modcfac_base(), constructCIRibbon(modcfac_base(), modelGls_null()))
   })
-  ###
+
   
   output$cfac <- renderDataTable(modcfac())
   
@@ -368,7 +368,7 @@ server <- function(input, output) {
   
   output$dfd <- renderDataTable(dfd())
   
-  # Output plot ----
+  # Output plot -----------------------------------------------------------------
   
   output$modelplot <- renderPlot({
     print(PlotInput())
@@ -500,6 +500,28 @@ server <- function(input, output) {
     par(fig = c(0.55, 1, 0.05, 0.75), new = TRUE)
     acf(residuals(modelGls()), type = 'partial')
   })
+  
+output$corr <- renderText({
+  curr <- paste0("AR", input$p, ", MA", input$q)
+  paste0("Autocorrelation correction: ", ifelse(input$p == 0 & input$q == 0, "none", curr))
+})  
+
+output$corrcompare <- renderText({
+  pplus1 <- mmodelGls_null %>% 
+    update(correlation = corARMA(p = input$p + 1, q = input$q,
+                                 form = ~ Time | England)) %>% 
+    anova(modelGls_null) %>% .[2, 'p-value']
+  qplus1 <- mmodelGls_null %>% 
+    update(correlation = corARMA(p = input$p, q = input$q + 1,
+                                 form = ~ Time | England)) %>% 
+    anova(modelGls_null) %>% .[2, 'p-value']
+  paste0(
+    corr(), "\n",
+    "ANOVA comparison with model AR", input$p+1, ", MA", input$q, ": p = ", pplus1, "\n",
+    "ANOVA comparison with model AR", input$p, ", MA", input$q+1, ": p = ", qplus1
+  )
+  
+})
 
 
 }

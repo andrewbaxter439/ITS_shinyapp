@@ -33,8 +33,8 @@ ui <- fluidPage(
                     value = FALSE),
       uiOutput("piyr1slider"),
       p("Autoregression correction"),
-      tags$div(id = "inline", column(6, numericInput("p", "AR: ", 0)),
-      column(6, numericInput("q", "MA: ", 0))),
+      tags$div(id = "inline", column(6, numericInput("p", "AR: ", 0, min = 0)),
+      column(6, numericInput("q", "MA: ", 0, min = 0))),
       h4("Download Graph"),
       column(4, numericInput("width", "Width (mm)", 200)),
       column(4, numericInput("height", "Height (mm)", 150)),
@@ -46,7 +46,8 @@ ui <- fluidPage(
                   tabPanel("Full Plot",
                            h3(textOutput(outputId = "minmax")),
                            plotOutput(outputId = "modelplot"),
-                           checkboxInput("ribbons", "Show confidence intervals", value = FALSE),
+                           column(6, checkboxInput("ribbons", "Show confidence intervals", value = FALSE)),
+                           column(6, p(align = "right", textOutput(outputId = "corr"))),
                            dataTableOutput(outputId = "modelsummary")
                            ),
                   # tabPanel("testing objects",
@@ -59,7 +60,8 @@ ui <- fluidPage(
                            h3("Autocorrelation plots"), p("Residuals plotted by time, and autoregression and partial-autoregression function plots"),
                            plotOutput("autocorr"),
                            h3("Durbin-Watson test"),
-                           dataTableOutput("dwt")),
+                           dataTableOutput("dwt")
+                           ),
                   tabPanel("Dataframe for model", dataTableOutput(outputId = "dataframesumm"))
       )
     )
