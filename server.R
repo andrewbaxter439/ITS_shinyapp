@@ -135,6 +135,9 @@ server <- function(input, output) {
         ) %>% 
       mutate(Year_Eng = Year*England)
   })
+
+# Start and end years ----------------------------------------------------------------------------------------
+
   
   minYr <- reactive({
     dfa() %>% filter(Country == input$main) %>% summarise(min(Year)) %>% pull()
@@ -147,15 +150,19 @@ server <- function(input, output) {
   output$minmax <- renderText({
     paste(input$main, "compared with", input$control, input$obRange[1], "-", input$obRange[2], sep=" ")
   })
-  
-  startYr <- reactive({
+
+# Phase-in period --------------------------------------------------------------------------------------------
+
+  startYr <- reactive({  # start of intervention offset by phase-in year
     if (input$pi1) {
       input$pi1yr+1 
     } else {
       input$int1yr
     }
   })
-  
+
+# Dataset setup ----------------------------------------------------------------------------------------------
+
   dfaPI <- reactive({
     if (input$pi1) {
       dfa() %>% 
@@ -190,39 +197,26 @@ server <- function(input, output) {
     }
   })
   
-  output$modelplotsimple <- renderPlot({
-    ggplot(data=dfc(), aes(
-      Year,
-      Value,
-      group = interaction(Country, Cat1, Cat2),
-      col = Country
-    )) +
-      geom_point() + geom_smooth(method = "lm", se = FALSE)
-  })
+  # output$modelplotsimple <- renderPlot({
+  #   ggplot(data=dfc(), aes(
+  #     Year,
+  #     Value,
+  #     group = interaction(Country, Cat1, Cat2),
+  #     col = Country
+  #   )) +
+  #     geom_point() + geom_smooth(method = "lm", se = FALSE)
+  # })  # Simple plot (not used)
   
   output$dataframesumm <- renderDataTable(
     (arrange(dfc(), by=Year)),
     options = list(searching = FALSE)
   )
-  
+
+# Construct model --------------------------------------------------------------------------------------------
+
   modelGls_null <- reactive({  # add if statements for each model
-    if (input$int2) {
-      gls(
-        Value ~ Year +
-          England +
-          Year_Eng +
-          Cat1 +
-          Trend1 +
-          Cat1_Eng +
-          Trend1_Eng +
-          Cat2 +
-          Trend2 +
-          Cat2_Eng +
-          Trend2_Eng,
-        data = dfc(),
-        correlation = NULL,
-        method = "ML"
-      )} else {
+    if (input$p == 0 & input$q == 0){
+      if (input$int2) {
         gls(
           Value ~ Year +
             England +
@@ -230,40 +224,88 @@ server <- function(input, output) {
             Cat1 +
             Trend1 +
             Cat1_Eng +
-            Trend1_Eng,
+            Trend1_Eng +
+            Cat2 +
+            Trend2 +
+            Cat2_Eng +
+            Trend2_Eng,
           data = dfc(),
           correlation = NULL,
           method = "ML"
-        )}
-  })
-  
-  modelGls <- reactive({  # add if statements for each model
-    if (input$int2) {
-      lm(
-        Value ~ Year +
-          England +
-          Year_Eng +
-          Cat1 +
-          Trend1 +
-          Cat1_Eng +
-          Trend1_Eng +
-          Cat2 +
-          Trend2 +
-          Cat2_Eng +
-          Trend2_Eng,
-        data = dfc()
-      )} else {
-        lm(
+        )} else {
+          gls(
+            Value ~ Year +
+              England +
+              Year_Eng +
+              Cat1 +
+              Trend1 +
+              Cat1_Eng +
+              Trend1_Eng,
+            data = dfc(),
+            correlation =  NULL,
+            method = "ML"
+          )}
+    } else {
+      if (input$int2) {
+        gls(
           Value ~ Year +
             England +
             Year_Eng +
             Cat1 +
             Trend1 +
             Cat1_Eng +
-            Trend1_Eng,
-          data = dfc()
-        )}
+            Trend1_Eng +
+            Cat2 +
+            Trend2 +
+            Cat2_Eng +
+            Trend2_Eng,
+          data = dfc(),
+          correlation = corARMA(p=input$p, q=input$q, form = ~ Year | England),
+          method = "ML"
+        )} else {
+          gls(
+            Value ~ Year +
+              England +
+              Year_Eng +
+              Cat1 +
+              Trend1 +
+              Cat1_Eng +
+              Trend1_Eng,
+            data = dfc(),
+            correlation =  NULL,
+            method = "ML"
+          )}
+      
+    }
   })
+  
+  # modelGls <- reactive({  # add if statements for each model
+  #   if (input$int2) {
+  #     lm(
+  #       Value ~ Year +
+  #         England +
+  #         Year_Eng +
+  #         Cat1 +
+  #         Trend1 +
+  #         Cat1_Eng +
+  #         Trend1_Eng +
+  #         Cat2 +
+  #         Trend2 +
+  #         Cat2_Eng +
+  #         Trend2_Eng,
+  #       data = dfc()
+  #     )} else {
+  #       lm(
+  #         Value ~ Year +
+  #           England +
+  #           Year_Eng +
+  #           Cat1 +
+  #           Trend1 +
+  #           Cat1_Eng +
+  #           Trend1_Eng,
+  #         data = dfc()
+  #       )}
+  # })
   
   
   
@@ -333,6 +375,13 @@ server <- function(input, output) {
   })
   
   PlotInput <- reactive({
+    
+     minlb <- ceiling(min(dfd()$Year, startYr())/5) * 5
+     mxlb <- floor(max(dfd()$Year)/5) * 5
+     
+     mnlbTm <- unique(dfd()[which(dfd()$Year==minlb),]$Time)
+     mxlbTm <- unique(dfd()[which(dfd()$Year==mxlb),]$Time)
+    
     dfd() %>% 
       mutate(Predict = predict(modelGls_null())) %>%  # Add Predicts for non-England
       ggplot(aes(
@@ -412,6 +461,7 @@ server <- function(input, output) {
       coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
       scale_x_continuous(limits = c(minYr(), NA))+
+      # scale_x_continuous(limits = c(minYr(), NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
         breaks = c("England", "Wales", "Scotland", "England and Wales", "Control"),
         values = c("Wales" = "#00AB39",

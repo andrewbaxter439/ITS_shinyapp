@@ -3,6 +3,10 @@ ui <- fluidPage(
   titlePanel("ITS analyses of England's Teenage Pregnancy Strategy"),
   sidebarLayout(
     sidebarPanel(
+      tags$head(
+        tags$style(type="text/css", "#inline label{ display: table-cell; text-align: center; vertical-align: middle; } 
+                   #inline .form-group { display: table-row;}")
+        ),
       selectInput(inputId = "ages",
                   label = "Age group:",
                   choices = c("Under 16", "Under 18", "Under 20"),
@@ -28,6 +32,9 @@ ui <- fluidPage(
                     label = "Phase-in",
                     value = FALSE),
       uiOutput("piyr1slider"),
+      p("Autoregression correction"),
+      tags$div(id = "inline", column(6, numericInput("p", "AR: ", 0)),
+      column(6, numericInput("q", "MA: ", 0))),
       h4("Download Graph"),
       column(4, numericInput("width", "Width (mm)", 200)),
       column(4, numericInput("height", "Height (mm)", 150)),
