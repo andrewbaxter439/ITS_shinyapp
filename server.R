@@ -90,7 +90,7 @@ server <- function(input, output) {
       label = "Select date range to observe",
       min = minYr(),
       max = maxYr(),
-      value = c(minYr(), maxYr()),
+      value = c(defaultMin(), maxYr()),
       step = 1,
       sep=""
     )
@@ -323,10 +323,15 @@ server <- function(input, output) {
         )}
   })
   
+  modelTable <- reactive({  # labelling coefficients
+    tb <- printCoefficients(modelGls_null())
+    tb$Coefficient[1:2] <- c(paste0(input$control, " rate at ", minYr()-1), paste0(input$control, " trend"))
+    tb
+  })
   
   
   output$modelsummary <- renderDataTable(
-    printCoefficients(modelGls_null()), options = list(searching = FALSE, paging = FALSE)
+    modelTable(), options = list(searching = FALSE, paging = FALSE)
   )
   
   # Create cfac --------------------------------------------------------
