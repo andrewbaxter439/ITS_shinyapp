@@ -71,6 +71,19 @@ server <- function(input, output) {
     contentType = paste0("image/", input$format)
   )
   
+  defaultMin <- reactive({
+    max(
+      dfa() %>% 
+        filter(Country == input$main) %>% 
+        summarise(min(Year)) %>% 
+        pull(),
+      dfa() %>% 
+        filter(Country == input$control) %>% 
+        summarise(min(Year)) %>% 
+        pull()
+    )
+  })
+  
   output$dateslider <- renderUI({
     sliderInput(
       inputId = "obRange",
@@ -118,11 +131,17 @@ server <- function(input, output) {
 
   
   minYr <- reactive({
-    dfa() %>% filter(Country == input$main) %>% summarise(min(Year)) %>% pull()
+    dfa() %>% 
+      # filter(Country == input$main) %>% 
+      summarise(min(Year)) %>% 
+      pull()
   })
   
   maxYr <- reactive({
-    dfa() %>% filter(Country == input$main) %>% summarise(max(Year)) %>% pull()
+    dfa() %>% 
+      # filter(Country == input$main) %>%
+      summarise(max(Year)) %>% 
+      pull()
   })
   
   output$minmax <- renderText({
@@ -151,7 +170,6 @@ server <- function(input, output) {
                                 Country == input$control) %>%
       gather("Year", "Value",-1) %>%
       filter(!is.na(Value)) %>%
-      arrange(Country) %>%
       mutate(
         Year = as.numeric(Year),
         Time = Year - min(Year) + 1,
