@@ -114,28 +114,6 @@ server <- function(input, output) {
                 value = input$int1yr+1)
   })
   
-
-# Dataframe setup --------------------------------------------------------------------------------------------
-
-  
-  
-  all.UK.rates <- reactive({read_xlsx("Conception rates by age and country.xlsx", sheet = paste(input$ages))})
-  output$fulldata <- renderDataTable(all.UK.rates())
-  
-  dfa <- reactive({
-    all.UK.rates() %>% filter(Country == input$main |
-                                Country == input$control) %>%
-      gather("Year", "Value",-1) %>%
-      filter(!is.na(Value)) %>%
-      arrange(Country) %>%
-      mutate(
-        Year = as.numeric(Year),
-        # Time = Year - min(Year) + 1,
-        England = ifelse(Country == input$main, 1, 0)
-        ) %>% 
-      mutate(Year_Eng = Year*England)
-  })
-
 # Start and end years ----------------------------------------------------------------------------------------
 
   
@@ -160,8 +138,28 @@ server <- function(input, output) {
       input$int1yr
     }
   })
+  
+# Dataframe setup --------------------------------------------------------------------------------------------
 
-# Dataset setup ----------------------------------------------------------------------------------------------
+  
+  
+  all.UK.rates <- reactive({read_xlsx("Conception rates by age and country.xlsx", sheet = paste(input$ages))})
+  output$fulldata <- renderDataTable(all.UK.rates())
+  
+  dfa <- reactive({
+    all.UK.rates() %>% filter(Country == input$main |
+                                Country == input$control) %>%
+      gather("Year", "Value",-1) %>%
+      filter(!is.na(Value)) %>%
+      arrange(Country) %>%
+      mutate(
+        Year = as.numeric(Year),
+        Time = Year - min(Year) + 1,
+        England = ifelse(Country == input$main, 1, 0)
+        ) %>% 
+      mutate(Time_Eng = Time*England)
+  })
+
 
   dfaPI <- reactive({
     if (input$pi1) {
@@ -178,7 +176,7 @@ server <- function(input, output) {
         mutate(Cat1 = ifelse(Year < input$int1yr, 0, 1),
                Trend1 = ifelse(Cat1 == 0, 0, Year - startYr() + 1)
         ) %>%
-        mutate_at(., colnames(.)[6:7], list(Eng = ~ .*England)) 
+        mutate_at(., colnames(.)[7:8], list(Eng = ~ .*England)) 
   })
   
   dfc <- reactive({
@@ -187,7 +185,7 @@ server <- function(input, output) {
         mutate(Cat2 = ifelse(Year < input$int2yr, 0, 1),
                Trend2 = ifelse(Cat2 == 0, 0, Year - input$int2yr + 1)
         ) %>%
-        mutate_at(., colnames(.)[10:11], list(Eng = ~ .*England)) %>% 
+        mutate_at(., colnames(.)[11:12], list(Eng = ~ .*England)) %>% 
         filter(Year >= input$obRange[1],
                Year <= input$obRange[2])
     } else {
@@ -218,9 +216,9 @@ server <- function(input, output) {
     if (input$p == 0 & input$q == 0){
       if (input$int2) {
         gls(
-          Value ~ Year +
+          Value ~ Time +
             England +
-            Year_Eng +
+            Time_Eng +
             Cat1 +
             Trend1 +
             Cat1_Eng +
@@ -234,9 +232,9 @@ server <- function(input, output) {
           method = "ML"
         )} else {
           gls(
-            Value ~ Year +
+            Value ~ Time +
               England +
-              Year_Eng +
+              Time_Eng +
               Cat1 +
               Trend1 +
               Cat1_Eng +
@@ -248,9 +246,9 @@ server <- function(input, output) {
     } else {
       if (input$int2) {
         gls(
-          Value ~ Year +
+          Value ~ Time +
             England +
-            Year_Eng +
+            Time_Eng +
             Cat1 +
             Trend1 +
             Cat1_Eng +
@@ -260,13 +258,13 @@ server <- function(input, output) {
             Cat2_Eng +
             Trend2_Eng,
           data = dfc(),
-          correlation = corARMA(p=input$p, q=input$q, form = ~ Year | England),
+          correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
           method = "ML"
         )} else {
           gls(
-            Value ~ Year +
+            Value ~ Time +
               England +
-              Year_Eng +
+              Time_Eng +
               Cat1 +
               Trend1 +
               Cat1_Eng +
@@ -282,9 +280,9 @@ server <- function(input, output) {
   modelGls <- reactive({  # model to check for autocorrelation
     if (input$int2) {
       lm(
-        Value ~ Year +
+        Value ~ Time +
           England +
-          Year_Eng +
+          Time_Eng +
           Cat1 +
           Trend1 +
           Cat1_Eng +
@@ -296,9 +294,9 @@ server <- function(input, output) {
         data = dfc()
       )} else {
         lm(
-          Value ~ Year +
+          Value ~ Time +
             England +
-            Year_Eng +
+            Time_Eng +
             Cat1 +
             Trend1 +
             Cat1_Eng +
@@ -318,9 +316,9 @@ server <- function(input, output) {
   modcfac_base <- reactive({
     if(input$int2) {
       tibble(
-        Year       = c(startYr():maxYr()),
+        Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
         England    = 1,
-        Year_Eng   = c(startYr():maxYr()),
+        Time_Eng   = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
         Cat1       = 1,
         Trend1     = c(1:(maxYr()-startYr()+1)),
         Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
@@ -333,9 +331,9 @@ server <- function(input, output) {
       ) 
     } else {
       tibble(
-        Year       = c(startYr():maxYr()),
+        Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
         England    = 1,
-        Year_Eng   = c(startYr():maxYr()),
+        Time_Eng   = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
         Cat1       = 1,
         Trend1     = c(1:(maxYr()-startYr()+1)),
         Cat2       = 0,
@@ -376,28 +374,28 @@ server <- function(input, output) {
   
   PlotInput <- reactive({
     
-     minlb <- ceiling(min(dfd()$Year, startYr())/5) * 5
-     mxlb <- floor(max(dfd()$Year)/5) * 5
+     minlb <- ceiling(min(dfc()$Year, startYr())/5) * 5
+     mxlb <- floor(max(dfc()$Year)/5) * 5
      
-     mnlbTm <- unique(dfd()[which(dfd()$Year==minlb),]$Time)
-     mxlbTm <- unique(dfd()[which(dfd()$Year==mxlb),]$Time)
+     mnlbTm <- unique(dfc()[which(dfc()$Year==minlb),]$Time)
+     mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
     
     dfd() %>% 
       mutate(Predict = predict(modelGls_null())) %>%  # Add Predicts for non-England
       ggplot(aes(
-        Year,
+        Time,
         Value,
         col = Country,
         fill = Country,
         group = interaction(Country, Cat1, Cat2)
       )) +
       # Show all data points
-      geom_point(data=dfa(), aes(Year, Value, col = Country), show.legend = FALSE, inherit.aes = FALSE) +
+      geom_point(data=dfa(), aes(Time, Value, col = Country), show.legend = FALSE, inherit.aes = FALSE) +
       # Counterfactual trend lines
       geom_line(
         data = modcfac(),
         aes(
-          x = Year,
+          x = Time,
           y = Predict,
           group = Cat2,
           col = "Control",
@@ -411,7 +409,7 @@ server <- function(input, output) {
       geom_ribbon(
         data=modcfac(),
         aes(
-          x=Year,
+          x=Time,
           ymin = lowCI,
           ymax=HiCI,
           group = Cat2,
@@ -427,7 +425,7 @@ server <- function(input, output) {
       # Confidence intervals (not shown in legend)
       geom_ribbon(
         aes(
-          x=Year,
+          x=Time,
           ymin = lowCI,
           ymax=HiCI,
           col=NULL,
@@ -437,10 +435,10 @@ server <- function(input, output) {
         size = 1,
         show.legend = FALSE) +
       # Intervention time points
-      geom_vline(xintercept = input$int1yr-0.5,
+      geom_vline(xintercept = startYr()-minYr()+0.5,
                  linetype = "dotted",
                  col = "#000000CC") +
-      geom_vline(xintercept = input$int2yr-0.5,
+      geom_vline(xintercept = input$int2yr-minYr()+0.5,
                  linetype = "dotted",
                  col = ifelse(input$int2, "#000000CC", NA)) +
       geom_rect(
@@ -460,8 +458,8 @@ server <- function(input, output) {
       xlab("Year") +
       coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
-      scale_x_continuous(limits = c(minYr(), NA))+
-      # scale_x_continuous(limits = c(minYr(), NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
+#      scale_x_continuous(limits = c(minYr(), NA))+
+      scale_x_continuous(limits = c(0, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
         breaks = c("England", "Wales", "Scotland", "England and Wales", "Control"),
         values = c("Wales" = "#00AB39",
@@ -501,25 +499,28 @@ server <- function(input, output) {
     acf(residuals(modelGls()), type = 'partial')
   })
   
-output$corr <- renderText({
+corr <- reactive({
   curr <- paste0("AR", input$p, ", MA", input$q)
   paste0("Autocorrelation correction: ", ifelse(input$p == 0 & input$q == 0, "none", curr))
 })  
 
-output$corrcompare <- renderText({
-  pplus1 <- mmodelGls_null %>% 
+output$corr <- renderText(corr())
+
+output$corrcompare <- renderUI({
+  pplus1 <- modelGls_null() %>% 
     update(correlation = corARMA(p = input$p + 1, q = input$q,
                                  form = ~ Time | England)) %>% 
-    anova(modelGls_null) %>% .[2, 'p-value']
-  qplus1 <- mmodelGls_null %>% 
+    anova(modelGls_null()) %>% .[2, 'p-value']
+  qplus1 <- modelGls_null() %>% 
     update(correlation = corARMA(p = input$p, q = input$q + 1,
                                  form = ~ Time | England)) %>% 
-    anova(modelGls_null) %>% .[2, 'p-value']
-  paste0(
-    corr(), "\n",
-    "ANOVA comparison with model AR", input$p+1, ", MA", input$q, ": p = ", pplus1, "\n",
-    "ANOVA comparison with model AR", input$p, ", MA", input$q+1, ": p = ", qplus1
-  )
+    anova(modelGls_null()) %>% .[2, 'p-value']
+  HTML(paste(
+    corr(),
+    paste0("ANOVA comparison with model AR", input$p+1, ", MA", input$q, ": p = ", round(pplus1, 3)),
+    paste0("ANOVA comparison with model AR", input$p, ", MA", input$q+1, ": p = ", round(qplus1, 3)),
+    sep = "<br>"
+  ))
   
 })
 
