@@ -46,8 +46,9 @@ ui <- fluidPage(
                   tabPanel("Full Plot",
                            h3(textOutput(outputId = "minmax")),
                            plotOutput(outputId = "modelplot"),
-                           column(6, checkboxInput("ribbons", "Show confidence intervals", value = FALSE)),
-                           column(6, p(align = "right", textOutput(outputId = "corr"))),
+                           column(4, checkboxInput("ribbons", "Show confidence intervals", value = FALSE)),
+                           column(4, p(align = "center", htmlOutput(outputId = "rSquared"))),
+                           column(4, p(align = "right", textOutput(outputId = "corr"))),
                            dataTableOutput(outputId = "modelsummary")
                            ),
                   # tabPanel("testing objects",
