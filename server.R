@@ -523,7 +523,7 @@ server <- function(input, output) {
           ymax=HiCI,
           group = interaction(Cat1, Cat2),
           col=NULL,
-          fill= ifelse(input$ribbons,"Control","#00000000")
+          fill= ifelse(input$ribbons,"Prediction","#00000000")
         ),
         alpha=0.5,
         size = 1,
