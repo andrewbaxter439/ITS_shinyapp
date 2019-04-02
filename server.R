@@ -230,54 +230,54 @@ server <- function(input, output) {
 # Construct model --------------------------------------------------------------------------------------------
 
   modelGls_null <- reactive({  # add if statements for each model
-    if (input$p == 0 & input$q == 0){
-      if (input$int2) {
-        gls(
-          Value ~ Time +
-            England +
-            Time_Eng +
-            Cat1 +
-            Trend1 +
-            Cat1_Eng +
-            Trend1_Eng +
-            Cat2 +
-            Trend2 +
-            Cat2_Eng +
-            Trend2_Eng,
-          data = dfc(),
-          correlation = NULL,
-          method = "ML"
-        )} else {
+    if (input$control == "none") {       # outer if - with/without control (x1)
+      if (input$p == 0 & input$q == 0){  # second if - with or without ARMA correction (x2)
+        if (input$int2) {                # innermost if - with or without second intervention (x2x2)
           gls(
             Value ~ Time +
-              England +
-              Time_Eng +
               Cat1 +
               Trend1 +
-              Cat1_Eng +
-              Trend1_Eng,
+              Cat2 +
+              Trend2,
             data = dfc(),
-            correlation =  NULL,
+            correlation = NULL,
             method = "ML"
-          )}
+          )
+        } else {
+          gls(
+            Value ~ Time +
+              Cat1 +
+              Trend1,
+            data = dfc(),
+            correlation = NULL,
+            method = "ML"
+          )
+        }
+      } else {
+        if (input$int2) {
+          gls(
+            Value ~ Time +
+              Cat1 +
+              Trend1 +
+              Cat2 +
+              Trend2,
+            data = dfc(),
+            correlation = corARMA(p=input$p, q=input$q, form = ~ Time),
+            method = "ML"
+          )} else {
+            gls(
+              Value ~ Time +
+                Cat1 +
+                Trend1,
+              data = dfc(),
+              correlation =  corARMA(p=input$p, q=input$q, form = ~ Time),
+              method = "ML"
+            )}
+        
+      }
     } else {
-      if (input$int2) {
-        gls(
-          Value ~ Time +
-            England +
-            Time_Eng +
-            Cat1 +
-            Trend1 +
-            Cat1_Eng +
-            Trend1_Eng +
-            Cat2 +
-            Trend2 +
-            Cat2_Eng +
-            Trend2_Eng,
-          data = dfc(),
-          correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
-          method = "ML"
-        )} else {
+      if (input$p == 0 & input$q == 0){
+        if (input$int2) {
           gls(
             Value ~ Time +
               England +
@@ -285,12 +285,59 @@ server <- function(input, output) {
               Cat1 +
               Trend1 +
               Cat1_Eng +
-              Trend1_Eng,
+              Trend1_Eng +
+              Cat2 +
+              Trend2 +
+              Cat2_Eng +
+              Trend2_Eng,
             data = dfc(),
-            correlation =  NULL,
+            correlation = NULL,
             method = "ML"
-          )}
-      
+          )} else {
+            gls(
+              Value ~ Time +
+                England +
+                Time_Eng +
+                Cat1 +
+                Trend1 +
+                Cat1_Eng +
+                Trend1_Eng,
+              data = dfc(),
+              correlation =  NULL,
+              method = "ML"
+            )}
+      } else {
+        if (input$int2) {
+          gls(
+            Value ~ Time +
+              England +
+              Time_Eng +
+              Cat1 +
+              Trend1 +
+              Cat1_Eng +
+              Trend1_Eng +
+              Cat2 +
+              Trend2 +
+              Cat2_Eng +
+              Trend2_Eng,
+            data = dfc(),
+            correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
+            method = "ML"
+          )} else {
+            gls(
+              Value ~ Time +
+                England +
+                Time_Eng +
+                Cat1 +
+                Trend1 +
+                Cat1_Eng +
+                Trend1_Eng,
+              data = dfc(),
+              correlation =  corARMA(p=input$p, q=input$q, form = ~ Time | England),
+              method = "ML"
+            )}
+        
+      }
     }
   })
   
@@ -298,21 +345,26 @@ server <- function(input, output) {
 # Simple linear model ----------------------------------------------------------------------------------------
 
   modelGls <- reactive({  # model to check for autocorrelation
-    if (input$int2) {
-      lm(
-        Value ~ Time +
-          England +
-          Time_Eng +
-          Cat1 +
-          Trend1 +
-          Cat1_Eng +
-          Trend1_Eng +
-          Cat2 +
-          Trend2 +
-          Cat2_Eng +
-          Trend2_Eng,
-        data = dfc()
-      )} else {
+    if (input$control == "none") {
+      if (input$int2) {
+        lm(
+          Value ~ Time +
+            Cat1 +
+            Trend1 +
+            Cat2 +
+            Trend2,
+          data = dfc()
+        )
+      } else {
+        lm(
+          Value ~ Time +
+            Cat1 +
+            Trend1,
+          data = dfc() 
+        )
+      }
+    } else {
+      if (input$int2) {
         lm(
           Value ~ Time +
             England +
@@ -320,9 +372,24 @@ server <- function(input, output) {
             Cat1 +
             Trend1 +
             Cat1_Eng +
-            Trend1_Eng,
+            Trend1_Eng +
+            Cat2 +
+            Trend2 +
+            Cat2_Eng +
+            Trend2_Eng,
           data = dfc()
-        )}
+        )} else {
+          lm(
+            Value ~ Time +
+              England +
+              Time_Eng +
+              Cat1 +
+              Trend1 +
+              Cat1_Eng +
+              Trend1_Eng,
+            data = dfc()
+          )}
+    }
   })
   
   output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
@@ -341,6 +408,25 @@ server <- function(input, output) {
   # Create cfac --------------------------------------------------------
   
   modcfac_base <- reactive({
+    if(input$control == "none"){
+    if(input$int2) {
+      tibble(
+        Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
+        Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
+        Trend1     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr()-input$int2yr+1)), 
+        Cat2       = 0,
+        Trend2     = 0
+      ) 
+    } else {
+      tibble(
+        Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
+        Cat1       = 0,
+        Trend1     = 0,
+        Cat2       = 0,
+        Trend2     = 0
+      )
+    }
+    } else {
     if(input$int2) {
       tibble(
         Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
@@ -370,10 +456,10 @@ server <- function(input, output) {
         Cat2_Eng   = 0,
         Trend2_Eng = 0
         # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
-      ) 
-      
+      )
     }
-  })
+  }
+    })
   
 
   modcfac <- reactive({
@@ -416,22 +502,6 @@ server <- function(input, output) {
         fill = Country,
         group = interaction(Country, Cat1, Cat2)
       )) +
-      # Show all data points
-      geom_point(data=dfa(), aes(Time, Value, col = Country), show.legend = FALSE, inherit.aes = FALSE) +
-      # Counterfactual trend lines
-      geom_line(
-        data = modcfac(),
-        aes(
-          x = Time,
-          y = Predict,
-          group = Cat2,
-          col = "Control",
-          fill = NULL
-        ),
-        linetype = "longdash",
-        size = 1,
-        inherit.aes = FALSE
-      ) +
       # Counterfactual confidence intervals (not shown in legend)
       geom_ribbon(
         data=modcfac(),
@@ -439,7 +509,7 @@ server <- function(input, output) {
           x=Time,
           ymin = lowCI,
           ymax=HiCI,
-          group = Cat2,
+          group = interaction(Cat1, Cat2),
           col=NULL,
           fill= ifelse(input$ribbons,"Control","#00000000")
         ),
@@ -447,9 +517,7 @@ server <- function(input, output) {
         size = 1,
         show.legend = FALSE,
         inherit.aes = FALSE) +
-      # Model trend lines
-      geom_line(aes(y=Predict), size = 1) +
-      # Confidence intervals (not shown in legend)
+      # Model confidence intervals (not shown in legend)
       geom_ribbon(
         aes(
           x=Time,
@@ -461,6 +529,24 @@ server <- function(input, output) {
         alpha= 0.5,
         size = 1,
         show.legend = FALSE) +
+      # Show all data points
+      geom_point(data=dfa(), aes(Time, Value, col = Country), show.legend = FALSE, inherit.aes = FALSE) +
+      # Counterfactual trend lines
+      geom_line(
+        data = modcfac(),
+        aes(
+          x = Time,
+          y = Predict,
+          group = interaction(Cat1, Cat2),
+          col = "Control",
+          fill = NULL
+        ),
+        linetype = "longdash",
+        size = 1,
+        inherit.aes = FALSE
+      ) +
+      # Model trend lines
+      geom_line(aes(y=Predict), size = 1) +
       # Intervention time points
       geom_vline(xintercept = input$int1yr-minYr()+0.5,
                  linetype = "dotted",
@@ -485,7 +571,6 @@ server <- function(input, output) {
       xlab("Year") +
       coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
-#      scale_x_continuous(limits = c(minYr(), NA))+
       scale_x_continuous(limits = c(0, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
         breaks = c("England", "Wales", "Scotland", "England and Wales", "Control"),
