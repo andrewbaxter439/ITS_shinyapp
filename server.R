@@ -19,8 +19,7 @@ require(svglite)
 
 
 testAutocorr <- function(model, data=NULL, max.lag = 10, time.points = 25) {
-  data <- eval(model$call$data)  # Only works if 'lm' call has dataframe named in bracket
-  # print(dwt(model, max.lag = max.lag, alternative = "two.sided"))
+  data <- eval(model$call$data)
   par(cex = 0.7, mai = c(0.1, 0.1, 0.2, 0.1))
   par(fig = c(0.03, 1, 0.8, 1))
   plot(
@@ -90,7 +89,7 @@ server <- function(input, output) {
       label = "Select date range to observe",
       min = minYr(),
       max = maxYr(),
-      value = c(defaultMin(), maxYr()),
+      value = c(minYr(), maxYr()),
       step = 1,
       sep=""
     )
@@ -295,6 +294,9 @@ server <- function(input, output) {
     }
   })
   
+
+# Simple linear model ----------------------------------------------------------------------------------------
+
   modelGls <- reactive({  # model to check for autocorrelation
     if (input$int2) {
       lm(
@@ -322,6 +324,8 @@ server <- function(input, output) {
           data = dfc()
         )}
   })
+  
+  output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
   
   modelTable <- reactive({  # labelling coefficients
     tb <- printCoefficients(modelGls_null())
@@ -458,15 +462,15 @@ server <- function(input, output) {
         size = 1,
         show.legend = FALSE) +
       # Intervention time points
-      geom_vline(xintercept = startYr()-minYr()+0.5,
+      geom_vline(xintercept = input$int1yr-minYr()+0.5,
                  linetype = "dotted",
                  col = "#000000CC") +
       geom_vline(xintercept = input$int2yr-minYr()+0.5,
                  linetype = "dotted",
                  col = ifelse(input$int2, "#000000CC", NA)) +
       geom_rect(
-        xmin = input$int1yr-0.5,
-        xmax = input$pi1yr+0.5,
+        xmin = input$int1yr-minYr()+0.5,
+        xmax = input$pi1yr-minYr()+1.5,
         ymin = 0,
         ymax = ylim()[2],
         fill = ifelse(input$pi1, "grey", NA),
@@ -504,11 +508,11 @@ server <- function(input, output) {
   )
   
   output$autocorr <- renderPlot({
-    rows <- maxYr()-minYr()+1
+    rows <- input$obRange[2]-input$obRange[1]+1
     par(cex = 0.7, mai = c(0.1, 0.1, 0.2, 0.1))
     par(fig = c(0.03, 1, 0.8, 1))
     plot(
-      dfc()$Year[1:rows],
+      unique(dfc()$Year)[1:rows],
       residuals(modelGls())[1:rows],
       type = 'o',
       pch = 16,
