@@ -392,11 +392,23 @@ server <- function(input, output) {
     }
   })
   
+
+# Outputs to display -----------------------------------------------------------------------------------------
+
   output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
+  
+  interceptName <- reactive({
+    if (input$control == "none"){
+      "England"
+    } else {
+      input$control
+    }
+  })
   
   modelTable <- reactive({  # labelling coefficients
     tb <- printCoefficients(modelGls_null())
-    tb$Coefficient[1:2] <- c(paste0(input$control, " rate at ", minYr()-1), paste0(input$control, " trend"))
+    tb$Coefficient[1:2] <- c(paste0(interceptName(), " rate at ", minYr()-1),
+                             paste0(interceptName(), " base trend"))
     tb
   })
   
@@ -538,7 +550,7 @@ server <- function(input, output) {
           x = Time,
           y = Predict,
           group = interaction(Cat1, Cat2),
-          col = "Control",
+          col = "Prediction",
           fill = NULL
         ),
         linetype = "longdash",
@@ -573,12 +585,12 @@ server <- function(input, output) {
       scale_y_continuous(expand = c(0, 0)) +
       scale_x_continuous(limits = c(0, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
-        breaks = c("England", "Wales", "Scotland", "England and Wales", "Control"),
+        breaks = c("England", "Wales", "Scotland", "England and Wales", "Prediction"),
         values = c("Wales" = "#00AB39",
                    "Scotland" = "#0072C6",
                    "England" = "#CF142B",
                    "England and Wales" = "#CF142B",
-                   "Control" = "#F7D917"),
+                   "Prediction" = "#F7D917"),
         aesthetics = c("colour", "fill"))
   })
   
