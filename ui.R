@@ -53,7 +53,7 @@ ui <- fluidPage(
                            ),
                   # tabPanel("testing objects",
                   #          h1(textOutput(outputId = "test")),
-                  #          dataTableOutput(outputId = "fulldata"),
+                           # dataTableOutput(outputId = "dataframesumm")
                   #                     plotOutput(outputId = "modelplotsimple"),
                   #                     dataTableOutput((outputId = "cfac"))
                   # ),

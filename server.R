@@ -144,7 +144,7 @@ server <- function(input, output) {
   })
   
   output$minmax <- renderText({
-    paste(input$main, "compared with", input$control, input$obRange[1], "-", input$obRange[2], sep=" ")
+    paste(input$main, ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")), input$obRange[1], "-", input$obRange[2], sep=" ")
   })
 
 # Phase-in period --------------------------------------------------------------------------------------------
@@ -399,7 +399,7 @@ server <- function(input, output) {
   
   interceptName <- reactive({
     if (input$control == "none"){
-      "England"
+      input$main
     } else {
       input$control
     }
