@@ -506,7 +506,8 @@ server <- function(input, output) {
      mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
     
     dfd() %>% 
-      mutate(Predict = predict(modelGls_null())) %>%  # Add Predicts for non-England
+      arrange(by = Country) %>%
+      mutate(Predict = predict(modelGls_null(), .)) %>%  # Add Predicts for non-England
       ggplot(aes(
         Time,
         Value,
@@ -586,9 +587,9 @@ server <- function(input, output) {
       scale_x_continuous(limits = c(0, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
         breaks = c("England", "Wales", "Scotland", "England and Wales", "Prediction"),
-        values = c("Wales" = "#00AB39",
+        values = c("England" = "#CF142B",
+                   "Wales" = "#00AB39",
                    "Scotland" = "#0072C6",
-                   "England" = "#CF142B",
                    "England and Wales" = "#CF142B",
                    "Prediction" = "#F7D917"),
         aesthetics = c("colour", "fill"))
