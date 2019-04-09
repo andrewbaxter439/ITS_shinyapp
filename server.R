@@ -460,7 +460,7 @@ server <- function(input, output) {
       tibble(
         Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
         Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
-        Trend1     = c(rep(0,(input$int2yr-startYr())), ((maxYr()-input$int1yr+2)-(input$int2yr-startYr())):(maxYr()-input$int1yr+1)), 
+        Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
         Cat2       = 0,
         Trend2     = 0
       ) 
