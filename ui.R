@@ -58,7 +58,7 @@ ui <- fluidPage(
                   #                     dataTableOutput((outputId = "cfac"))
                   # ),
                   tabPanel("Autocorrelation tests", 
-                           h3("Autocorrelation plots"), p("Residuals plotted by time, and autoregression and partial-autoregression function plots"),
+                           h3("Autocorrelation plots"), p("Residuals plotted by time, and autocorrelation and partial-autocorrelation function plots"),
                            plotOutput("autocorr"),
                            h3("Durbin-Watson test"),
                            dataTableOutput("dwt"),

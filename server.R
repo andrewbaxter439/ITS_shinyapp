@@ -55,9 +55,6 @@ printCoefficients <- function(model){
     print()
 }
 
-#** Server ----
-
-
 server <- function(input, output) {
   
 
@@ -66,7 +63,7 @@ server <- function(input, output) {
   output$dlgraph <- downloadHandler(
     #   filename = function() {paste0("ITS controlled.", input$format)},
     filename = function() {paste0(input$main, " ", minYr(), "-", maxYr(), ".", input$format)},
-    content = function(file) {ggsave(file, PlotInput(), dpi = 500, units = "mm", width = input$width, height = input$height)},
+    content = function(file) {ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)},
     contentType = paste0("image/", input$format)
   )
   
@@ -405,10 +402,13 @@ server <- function(input, output) {
     }
   })
   
+  
   modelTable <- reactive({  # labelling coefficients
     tb <- printCoefficients(modelGls_null())
     tb$Coefficient[1:2] <- c(paste0(interceptName(), " rate at ", minYr()-1),
                              paste0(interceptName(), " base trend"))
+                             # paste0(input$main, " difference in rate at ", minYr()-1),
+                             # paste0(input$main, " difference in base trend"))
     tb
   })
   
