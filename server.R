@@ -542,10 +542,10 @@ server <- function(input, output) {
   
   PlotInput <- reactive({
     
-     minlb <- ceiling(input$obRange[1]/5) * 5
+     minlb <- floor(input$obRange[1]/5) * 5
      mxlb <- floor(max(dfc()$Year)/5) * 5
      
-     mnlbTm <- unique(dfc()[which(dfc()$Year==minlb),]$Time)
+     mnlbTm <- unique(dfc()[which(dfc()$Year==minlb+5),]$Time)-5
      mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
     
     dfd() %>% 
