@@ -141,7 +141,11 @@ server <- function(input, output) {
   })
   
   output$minmax <- renderText({
-    paste(input$main, ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")), input$obRange[1], "-", input$obRange[2], sep=" ")
+    paste(input$main,
+          ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
+          input$obRange[1], "-",
+          input$obRange[2],
+          sep=" ")
   })
 
 # Phase-in period --------------------------------------------------------------------------------------------
@@ -402,14 +406,45 @@ server <- function(input, output) {
     }
   })
   
+
+# Naming model table -----------------------------------------------------------------------------------------
+
   
+
   modelTable <- reactive({  # labelling coefficients
+    labs <-   tibble(lab1 = c("(Intercept)",
+                              "Time",
+                              "England",
+                              "Time_Eng",
+                              "Cat1",
+                              "Trend1",
+                              "Cat1_Eng",
+                              "Trend1_Eng",
+                              "Cat2",
+                              "Trend2",
+                              "Cat2_Eng",
+                              "Trend2_Eng"),
+                     lab2 = c(paste0(interceptName(), " rate at ", minYr()-1),
+                              paste0(interceptName(), " base trend"),
+                              paste0(input$main, " difference in rate at ", minYr()-1),
+                              paste0(input$main, " difference in base trend"),
+                              paste0(interceptName(), " change in level at intervention 1"),
+                              paste0(interceptName(), " change in trend at intervention 1"),
+                              paste0(input$main, " difference in level from control at intervention 1"),
+                              paste0(input$main, " difference in trend from control at intervention 1"),
+                              paste0(interceptName(), " change in level at intervention 2"),
+                              paste0(interceptName(), " change in trend at intervention 2"),
+                              paste0(input$main, " difference in level from control at intervention 2"),
+                              paste0(input$main, " difference in trend from control at intervention 2")
+                     ))
     tb <- printCoefficients(modelGls_null())
-    tb$Coefficient[1:2] <- c(paste0(interceptName(), " rate at ", minYr()-1),
-                             paste0(interceptName(), " base trend"))
-                             # paste0(input$main, " difference in rate at ", minYr()-1),
-                             # paste0(input$main, " difference in base trend"))
+    
+    for (i in 1:length(tb$Coefficient)) {
+      tb[i, 'Coefficient'] <- labs$lab2[which(labs$lab1==tb[[i, 'Coefficient']])] 
+    }
+    
     tb
+    
   })
   
   
