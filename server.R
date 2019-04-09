@@ -611,8 +611,8 @@ server <- function(input, output) {
                  linetype = "dotted",
                  col = ifelse(input$int2, "#000000CC", NA)) +
       geom_rect(
-        xmin = input$int1yr-minYr()+0.5,
-        xmax = input$pi1yr-minYr()+1.5,
+        xmin = input$int1yr-input$obRange[1]+0.5,
+        xmax = input$pi1yr-input$obRange[1]+1.5,
         ymin = 0,
         ymax = ylim()[2],
         fill = ifelse(input$pi1, "grey", NA),
@@ -627,7 +627,8 @@ server <- function(input, output) {
       xlab("Year") +
       coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
-      scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
+      # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
+      scale_x_continuous(limits = c(mnlbTm, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
         breaks = c("England", "Wales", "Scotland", "England and Wales", "Prediction"),
         values = c("England" = "#CF142B",
