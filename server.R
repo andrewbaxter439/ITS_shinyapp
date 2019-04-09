@@ -174,17 +174,23 @@ server <- function(input, output) {
         Year = as.numeric(Year),
         Time = Year - min(Year) + 1,
         England = ifelse(Country == input$main, 1, 0)
-        ) %>% 
+        )    %>%    
       mutate(Time_Eng = Time*England)
+  })
+  
+  dfa2 <- reactive({
+    dfa() %>% 
+      mutate(Time = Year - input$obRange[1] + 1,
+             Time_Eng = Time*England)
   })
 
 
   dfaPI <- reactive({
     if (input$pi1) {
-      dfa() %>% 
+      dfa2() %>% 
         filter(Year < input$int1yr | Year > input$pi1yr)
     } else {
-      dfa()
+      dfa2()
     }
   })
   
@@ -424,9 +430,9 @@ server <- function(input, output) {
                               "Trend2",
                               "Cat2_Eng",
                               "Trend2_Eng"),
-                     lab2 = c(paste0(interceptName(), " rate at ", minYr()-1),
+                     lab2 = c(paste0(interceptName(), " (est) rate at ", input$obRange[1]-1),
                               paste0(interceptName(), " base trend"),
-                              paste0(input$main, " difference in rate at ", minYr()-1),
+                              paste0(input$main, " difference in rate at ", input$obRange[1]-1),
                               paste0(input$main, " difference in base trend"),
                               paste0(interceptName(), " change in level at intervention 1"),
                               paste0(interceptName(), " change in trend at intervention 1"),
@@ -458,7 +464,7 @@ server <- function(input, output) {
     if(input$control == "none"){
     if(input$int2) {
       tibble(
-        Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
+        Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
         Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
         Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
         Cat2       = 0,
@@ -466,7 +472,7 @@ server <- function(input, output) {
       ) 
     } else {
       tibble(
-        Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
+        Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
         Cat1       = 0,
         Trend1     = 0,
         Cat2       = 0,
@@ -476,9 +482,9 @@ server <- function(input, output) {
     } else {
     if(input$int2) {
       tibble(
-        Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
+        Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
         England    = 1,
-        Time_Eng   = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
+        Time_Eng   = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
         Cat1       = 1,
         Trend1     = c(1:(maxYr()-startYr()+1)),
         Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
@@ -491,9 +497,9 @@ server <- function(input, output) {
       ) 
     } else {
       tibble(
-        Time       = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
+        Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
         England    = 1,
-        Time_Eng   = c((startYr()-minYr()+1):(maxYr() - minYr()+1)),
+        Time_Eng   = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
         Cat1       = 1,
         Trend1     = c(1:(maxYr()-startYr()+1)),
         Cat2       = 0,
@@ -521,7 +527,9 @@ server <- function(input, output) {
   })
   
   dfd <- reactive({
-    left_join(dfc(), constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null())) 
+    left_join(dfc(), constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null())) %>% 
+      arrange(by = Country) %>%
+      mutate(Predict = predict(modelGls_null(), .))# Add Predicts for non-England
   })
   
   output$dfd <- renderDataTable(dfd())
@@ -534,15 +542,15 @@ server <- function(input, output) {
   
   PlotInput <- reactive({
     
-     minlb <- ceiling(min(dfc()$Year, startYr())/5) * 5
+     minlb <- ceiling(input$obRange[1]/5) * 5
      mxlb <- floor(max(dfc()$Year)/5) * 5
      
      mnlbTm <- unique(dfc()[which(dfc()$Year==minlb),]$Time)
      mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
     
     dfd() %>% 
-      arrange(by = Country) %>%
-      mutate(Predict = predict(modelGls_null(), .)) %>%  # Add Predicts for non-England
+      # arrange(by = Country) %>%
+      # mutate(Predict = predict(modelGls_null(), .)) %>%  # Add Predicts for non-England
       ggplot(aes(
         Time,
         Value,
@@ -578,7 +586,7 @@ server <- function(input, output) {
         size = 1,
         show.legend = FALSE) +
       # Show all data points
-      geom_point(data=dfa(), aes(Time, Value, col = Country), show.legend = FALSE, inherit.aes = FALSE) +
+      geom_point(data=dfa2(), aes(Time, Value, col = Country), show.legend = FALSE, inherit.aes = FALSE) +
       # Counterfactual trend lines
       geom_line(
         data = modcfac(),
@@ -596,10 +604,10 @@ server <- function(input, output) {
       # Model trend lines
       geom_line(aes(y=Predict), size = 1) +
       # Intervention time points
-      geom_vline(xintercept = input$int1yr-minYr()+0.5,
+      geom_vline(xintercept = input$int1yr-input$obRange[1]+0.5,
                  linetype = "dotted",
                  col = "#000000CC") +
-      geom_vline(xintercept = input$int2yr-minYr()+0.5,
+      geom_vline(xintercept = input$int2yr-input$obRange[1]+0.5,
                  linetype = "dotted",
                  col = ifelse(input$int2, "#000000CC", NA)) +
       geom_rect(
@@ -619,7 +627,7 @@ server <- function(input, output) {
       xlab("Year") +
       coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
-      scale_x_continuous(limits = c(0, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
+      scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
         breaks = c("England", "Wales", "Scotland", "England and Wales", "Prediction"),
         values = c("England" = "#CF142B",
