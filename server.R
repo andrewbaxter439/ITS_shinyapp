@@ -1,4 +1,4 @@
-list.of.packages <- c("tidyverse", "readxl", "broom", "nlme", "car", "svglite")
+list.of.packages <- c("tidyverse", "readxl", "broom", "nlme", "car", "svglite", "export")
 
 #checking missing packages from list
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -11,7 +11,9 @@ require(readxl)
 require(broom)
 require(nlme)
 require(car)
+require(export)
 require(svglite)
+require(XLConnect)
 
 
 # Setup data and functions -----------------------------------------------------------------------------------
@@ -44,7 +46,8 @@ constructCIRibbon <- function(newdata, model) {
                      data = newdata)
   vars <- mm %*% vcov(model) %*% t(mm)
   sds <- sqrt(diag(vars))
-  newdata <- newdata %>% mutate(lowCI = Predict - 1.96 * sds,
+  newdata <- newdata %>% mutate(se = sds,
+                                lowCI = Predict - 1.96 * sds,
                                 HiCI = Predict + 1.96 * sds)
 }
 
@@ -55,16 +58,54 @@ printCoefficients <- function(model){
     print()
 }
 
-server <- function(input, output) {
+server <- function(input, output, session) {
   
 
 # Reactive inputs -------------------------------------------------------------------------------------------
 
+  observeEvent(input$go2graph, {
+    updateTabsetPanel(session, "session", selected = "Full Plot")
+  })
+  
   output$dlgraph <- downloadHandler(
-    #   filename = function() {paste0("ITS controlled.", input$format)},
-    filename = function() {paste0(input$main, " ", minYr(), "-", maxYr(), ".", input$format)},
-    content = function(file) {ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)},
-    contentType = paste0("image/", input$format)
+    filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".", input$format)},
+    # content = ifelse(input$format == "pptx",
+    #                  function(file) {graph2ppt(PlotInput(), file)},
+    #                  function(file) {ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)}
+    # )
+    content = function(file) {
+                                     ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)
+  },
+  contentType = paste0("image/", input$format)
+  )
+  
+  output$dlppt <- downloadHandler(
+    filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".pptx")},
+    content = function(file){graph2ppt(PlotInput(), file = file, height = 6, width = 9.5)}
+  )
+  
+  # output$dlconfints <- downloadHandler(
+  #   filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".csv")},
+  #   content = function(file) {write.csv(confintervals(), file, row.names = FALSE)},
+  #   contentType = "file/csv"
+  # )
+
+  
+    output$dlconfints <- downloadHandler(
+    filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".xlsx")},
+    content = function(file) {
+     fname <- paste(file,"xlsx",sep=".")
+     wb <- loadWorkbook(fname, create = TRUE)
+     createSheet(wb, name = "model")
+     createSheet(wb, name = "data")
+     createSheet(wb, name = "counterfactual")
+     writeWorksheet(wb, confintervals(), sheet = "model")
+     writeWorksheet(wb, dfd(), sheet = "data")
+     writeWorksheet(wb, modcfac(), sheet = "counterfactual")
+     saveWorkbook(wb)
+     file.rename(fname,file)
+      },
+    contentType = "file/xlsx"
   )
   
   defaultMin <- reactive({
@@ -348,7 +389,6 @@ server <- function(input, output) {
     }
   })
   
-
 # Simple linear model ----------------------------------------------------------------------------------------
 
   modelGls <- reactive({  # model to check for autocorrelation
@@ -416,7 +456,7 @@ server <- function(input, output) {
 # Naming model table -----------------------------------------------------------------------------------------
 
   
-
+  
   modelTable <- reactive({  # labelling coefficients
     labs <-   tibble(lab1 = c("(Intercept)",
                               "Time",
@@ -442,16 +482,60 @@ server <- function(input, output) {
                               paste0(interceptName(), " change in trend at intervention 2"),
                               paste0(input$main, " difference in level from control at intervention 2"),
                               paste0(input$main, " difference in trend from control at intervention 2")
-                     ))
+                     )
+    )
     tb <- printCoefficients(modelGls_null())
+    
+    betas <- tibble(Beta =  c(
+      paste0("\U03B2", "0"),
+      paste0("\U03B2", "1"),
+      paste0("\U03B2", "2"),
+      paste0("\U03B2", "3"),
+      paste0("\U03B2", "4"),
+      paste0("\U03B2", "5"),
+      paste0("\U03B2", "6"),
+      paste0("\U03B2", "6"),
+      paste0("\U03B2", "7"),
+      paste0("\U03B2", "8"),
+      paste0("\U03B2", "10"),
+      paste0("\U03B2", "11")
+      # withMathJax("\\(\\beta_0\\)"),
+      # withMathJax("\\(\\beta_1\\)"),
+      # withMathJax("\\(\\beta_2\\)"),
+      # withMathJax("\\(\\beta_3\\)"),
+      # withMathJax("\\(\\beta_4\\)"),
+      # withMathJax("\\(\\beta_5\\)"),
+      # withMathJax("\\(\\beta_6\\)"),
+      # withMathJax("\\(\\beta_7\\)"),
+      # withMathJax("\\(\\beta_8\\)"),
+      # withMathJax("\\(\\beta_9\\)"),
+      # withMathJax("\\(\\beta_{10}\\)"),
+      # withMathJax("\\(\\beta_{11}\\)")
+    )
+    )
     
     for (i in 1:length(tb$Coefficient)) {
       tb[i, 'Coefficient'] <- labs$lab2[which(labs$lab1==tb[[i, 'Coefficient']])] 
+      tb[i, '\U03B2'] <- betas[i, 'Beta']
     }
     
-    tb
+    
+    tb[, c(5, 1:4)]
     
   })
+  
+# Outputting tables ------------------------------------------------------------------------------------------
+  
+  output$confint<- renderDataTable(confintervals() %>% select(-Std.Error), 
+                                   options = list(searching = FALSE, paging = FALSE))
+  
+  confintervals <- reactive({
+    modelTable() %>%
+      select(Coefficient, Value, Std.Error) %>%
+      bind_cols(tibble("Lower CI" = round(confint(modelGls_null())[ ,1], 3),
+                       "Upper CI" = round(confint(modelGls_null())[ ,2], 3)))
+  })
+  
   
   
   output$modelsummary <- renderDataTable(
@@ -533,6 +617,54 @@ server <- function(input, output) {
   })
   
   output$dfd <- renderDataTable(dfd())
+  
+
+  # Output equation --------------------------------------------------------------------------------------------
+  output$equation <- renderUI({
+  eqtext <-   if (!input$int2){
+      if (input$control == "none") {
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention+\\beta_3*Trend+\\epsilon$$"
+      } else {
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Group+\\beta_3*Group*Time+\\beta_4*Intervention+$$
+        $$\\beta_5*Trend+\\beta_6*Intervention*Group+\\beta_7*Trend*Group+\\epsilon$$"
+      }
+    } else {
+      if (input$control == "none") {
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention_1+\\beta_3*Trend_1+$$
+        $$\\beta_4*Intervention_2+\\beta_5*Trend_2+\\epsilon$$"
+      } else {
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+
+        \\beta_2*Group+
+        \\beta_3*Group*Time+
+        \\beta_4*Intervention_1+$$
+        $$\\beta_5*Trend_1+
+        \\beta_6*Group*Intervention_1+
+        \\beta_7*Group*Trend_1+
+        \\beta_8*Intervention_2+$$
+        $$\\beta_9*Trend_2+
+        \\beta_{10}*Group*Intervention_2+
+        \\beta_{11}*Group*Trend_2+
+        \\epsilon$$" 
+      }
+    }
+  return(withMathJax(eqtext))
+    #   eq1 <- "\\beta_2*Intervention_1+\\beta_3*Trend_1+"
+    #   eq3 <- "\\beta_2*Intervention_1+\\beta_3*Trend_1+"
+    # } else {
+    #   eq1 <- "\\beta_2*Intervention+\\beta_3*Trend+"
+    #   eq3 <- ""
+    # }
+    # if (input$control == "none"){
+    #   eq2 <- ""
+    # } else {
+    #   eq2 <- "*Group"
+    # }
+    # withMathJax(
+    #   paste0(
+    #     "Equation: $$Rate = \\beta_0+\\beta_1*Time+", eq1, "\\epsilon$$", ep = ""
+    #   )
+    # )
+  })
   
   # Output plot -----------------------------------------------------------------
   
@@ -634,8 +766,8 @@ server <- function(input, output) {
         values = c("England" = "#CF142B",
                    "Wales" = "#00AB39",
                    "Scotland" = "#0072C6",
-                   "England and Wales" = "#CF142B",
-                   "Prediction" = "#F7D917"),
+                   "England and Wales" = "#A50115",
+                   "Prediction" = "#FFC000"),
         aesthetics = c("colour", "fill"))
   })
   
