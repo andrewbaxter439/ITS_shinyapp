@@ -69,10 +69,6 @@ server <- function(input, output, session) {
   
   output$dlgraph <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".", input$format)},
-    # content = ifelse(input$format == "pptx",
-    #                  function(file) {graph2ppt(PlotInput(), file)},
-    #                  function(file) {ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)}
-    # )
     content = function(file) {
                                      ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)
   },
@@ -81,7 +77,7 @@ server <- function(input, output, session) {
   
   output$dlppt <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".pptx")},
-    content = function(file){graph2ppt(PlotInput(), file = file, height = 6, width = 9.5)}
+    content = function(file){graph2ppt(PlotInput() + theme(text = element_text(size = 18), axis.text.x = element_text(margin = margin(5,0,0,0))), file = file, height = input$height/25.4, width = input$width/25.4)}
   )
   
   # output$dlconfints <- downloadHandler(
@@ -730,11 +726,11 @@ server <- function(input, output, session) {
           fill = NULL
         ),
         linetype = "longdash",
-        size = 1,
+        size = 1.5,
         inherit.aes = FALSE
       ) +
       # Model trend lines
-      geom_line(aes(y=Predict), size = 1) +
+      geom_line(aes(y=Predict), size = 1.5) +
       # Intervention time points
       geom_vline(xintercept = input$int1yr-input$obRange[1]+0.5,
                  linetype = "dotted",
