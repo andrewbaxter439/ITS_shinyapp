@@ -76,7 +76,11 @@ ui <- fluidPage(
                            h3("Durbin-Watson test"),
                            dataTableOutput("dwt"),
                            br(),
-                           htmlOutput(outputId = "corrcompare")
+                           # htmlOutput(outputId = "corrcompare")
+                           h4(textOutput("pplus1_title")),
+                           dataTableOutput("pplus1"),
+                           h4(textOutput("qplus1_title")),
+                           dataTableOutput("qplus1")
                            ),
                   
                   tabPanel("Dataframe for model", dataTableOutput(outputId = "dataframesumm"))

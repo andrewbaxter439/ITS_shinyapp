@@ -77,14 +77,9 @@ server <- function(input, output, session) {
   
   output$dlppt <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".pptx")},
-    content = function(file){graph2ppt(PlotInput() + theme(text = element_text(size = 18), axis.text.x = element_text(margin = margin(5,0,0,0))), file = file, height = input$height/25.4, width = input$width/25.4)}
+    content = function(file){graph2ppt(PlotInput() + theme(text = element_text(size = 16), line = element_blank()), file = file, height = input$height/25.4, width = input$width/25.4)}
   )
   
-  # output$dlconfints <- downloadHandler(
-  #   filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".csv")},
-  #   content = function(file) {write.csv(confintervals(), file, row.names = FALSE)},
-  #   contentType = "file/csv"
-  # )
 
   
     output$dlconfints <- downloadHandler(
@@ -387,58 +382,59 @@ server <- function(input, output, session) {
   
 # Simple linear model ----------------------------------------------------------------------------------------
 
-  modelGls <- reactive({  # model to check for autocorrelation
-    if (input$control == "none") {
-      if (input$int2) {
-        lm(
-          Value ~ Time +
-            Cat1 +
-            Trend1 +
-            Cat2 +
-            Trend2,
-          data = dfc()
-        )
-      } else {
-        lm(
-          Value ~ Time +
-            Cat1 +
-            Trend1,
-          data = dfc() 
-        )
-      }
-    } else {
-      if (input$int2) {
-        lm(
-          Value ~ Time +
-            England +
-            Time_Eng +
-            Cat1 +
-            Trend1 +
-            Cat1_Eng +
-            Trend1_Eng +
-            Cat2 +
-            Trend2 +
-            Cat2_Eng +
-            Trend2_Eng,
-          data = dfc()
-        )} else {
-          lm(
-            Value ~ Time +
-              England +
-              Time_Eng +
-              Cat1 +
-              Trend1 +
-              Cat1_Eng +
-              Trend1_Eng,
-            data = dfc()
-          )}
-    }
-  })
-  
+   modelGls <- reactive({  # model to check for autocorrelation
+     if (input$control == "none") {
+       if (input$int2) {
+         lm(
+           Value ~ Time +
+             Cat1 +
+             Trend1 +
+             Cat2 +
+             Trend2,
+           data = dfc()
+         )
+       } else {
+         lm(
+           Value ~ Time +
+             Cat1 +
+             Trend1,
+           data = dfc()
+         )
+       }
+     } else {
+       if (input$int2) {
+         lm(
+           Value ~ Time +
+             England +
+             Time_Eng +
+             Cat1 +
+             Trend1 +
+             Cat1_Eng +
+             Trend1_Eng +
+             Cat2 +
+             Trend2 +
+             Cat2_Eng +
+             Trend2_Eng,
+           data = dfc()
+         )} else {
+           lm(
+             Value ~ Time +
+               England +
+               Time_Eng +
+               Cat1 +
+               Trend1 +
+               Cat1_Eng +
+               Trend1_Eng,
+             data = dfc()
+           )}
+     }
+   })
+
 
 # Outputs to display -----------------------------------------------------------------------------------------
 
-  output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
+  output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(cor(dfd()$Predict, dfd()$Value),digits = 4))))
+  # output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
   
   interceptName <- reactive({
     if (input$control == "none"){
@@ -523,7 +519,7 @@ server <- function(input, output, session) {
 # Outputting tables ------------------------------------------------------------------------------------------
   
   output$confint<- renderDataTable(confintervals() %>% select(-Std.Error), 
-                                   options = list(searching = FALSE, paging = FALSE))
+                                   options = list(searching = FALSE, paging = FALSE, info = FALSE))
   
   confintervals <- reactive({
     modelTable() %>%
@@ -535,7 +531,7 @@ server <- function(input, output, session) {
   
   
   output$modelsummary <- renderDataTable(
-    modelTable(), options = list(searching = FALSE, paging = FALSE)
+    modelTable(), options = list(searching = FALSE, paging = FALSE, info = FALSE)
   )
   
   # Create cfac --------------------------------------------------------
@@ -665,6 +661,7 @@ server <- function(input, output, session) {
   # Output plot -----------------------------------------------------------------
   
   output$modelplot <- renderPlot({
+    req(input$obRange)
     print(PlotInput())
   })
   
@@ -753,7 +750,8 @@ server <- function(input, output, session) {
             panel.grid = element_blank()) +
       ylab("Rate of pregnancies to under-18s, per 1,000") +
       xlab("Year") +
-      coord_cartesian(ylim = ylim()) +
+      coord_cartesian(ylim = c(0, 60)) +
+      # coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
       # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_x_continuous(limits = c(mnlbTm, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
@@ -774,7 +772,7 @@ server <- function(input, output, session) {
     (
     data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
        ),
-    options = list(searching = FALSE, paging = FALSE)
+    options = list(searching = FALSE, paging = FALSE, info = FALSE)
   )
   
   output$autocorr <- renderPlot({
@@ -783,43 +781,67 @@ server <- function(input, output, session) {
     par(fig = c(0.03, 1, 0.8, 1))
     plot(
       unique(dfc()$Year)[1:rows],
-      residuals(modelGls())[1:rows],
+      residuals(modelGls_null())[1:rows],
       type = 'o',
       pch = 16,
       col = "red"
     )
     
     par(fig = c(0.03, 0.5, 0.05, 0.75), new = TRUE)
-    acf(residuals(modelGls()))
+    acf(residuals(modelGls_null(), type = "normalized"))
     
     par(fig = c(0.55, 1, 0.05, 0.75), new = TRUE)
-    acf(residuals(modelGls()), type = 'partial')
+    acf(residuals(modelGls_null(), type = "normalized"), type = 'partial')
   })
   
+  modelText <- reactive({paste0("AR", input$p, ", MA", input$q)})
+  
 corr <- reactive({
-  curr <- paste0("AR", input$p, ", MA", input$q)
-  paste0("Autocorrelation correction: ", ifelse(input$p == 0 & input$q == 0, "none", curr))
+  paste0("Autocorrelation correction: ", ifelse(input$p == 0 & input$q == 0, "none", modelText()))
 })  
 
 output$corr <- renderText(corr())
 
-output$corrcompare <- renderUI({
-  pplus1 <- modelGls_null() %>% 
+pplus1_text <- renderText({paste0("AR", input$p+1, ", MA", input$q)})
+
+output$pplus1_title <- renderText({paste0("ANOVA comparison with model ", pplus1_text(), ":")})
+
+output$pplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {modelGls_null() %>% 
     update(correlation = corARMA(p = input$p + 1, q = input$q,
                                  form = ~ Time | England)) %>% 
-    anova(modelGls_null()) %>% .[2, 'p-value']
-  qplus1 <- modelGls_null() %>% 
+    anova(modelGls_null(),.)%>% 
+    mutate(call = c(modelText(), pplus1_text())) })
+
+qplus1_text <- renderText({paste0("AR", input$p, ", MA", input$q+1)})
+
+output$qplus1_title <- renderText({paste0("ANOVA comparison with model ", qplus1_text(), ":")})
+
+output$qplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {modelGls_null() %>% 
     update(correlation = corARMA(p = input$p, q = input$q + 1,
                                  form = ~ Time | England)) %>% 
-    anova(modelGls_null()) %>% .[2, 'p-value']
-  HTML(paste(
-    corr(),
-    paste0("ANOVA comparison with model AR", input$p+1, ", MA", input$q, ": p = ", round(pplus1, 3)),
-    paste0("ANOVA comparison with model AR", input$p, ", MA", input$q+1, ": p = ", round(qplus1, 3)),
-    sep = "<br>"
-  ))
-  
-})
+    anova(modelGls_null(),.)%>% 
+    mutate(call = c(modelText(), qplus1_text()))
+  })
+
+
+
+# output$corrcompare <- renderUI({
+#   pplus1 <- modelGls_null() %>% 
+#     update(correlation = corARMA(p = input$p + 1, q = input$q,
+#                                  form = ~ Time | England)) %>% 
+#     anova(modelGls_null()) %>% .[2, 'p-value']
+#   qplus1 <- modelGls_null() %>% 
+#     update(correlation = corARMA(p = input$p, q = input$q + 1,
+#                                  form = ~ Time | England)) %>% 
+#     anova(modelGls_null()) %>% .[2, 'p-value']
+#   HTML(paste(
+#     corr(),
+#     paste0("ANOVA comparison with model AR", input$p+1, ", MA", input$q, ": p = ", round(pplus1, 3)),
+#     paste0("ANOVA comparison with model AR", input$p, ", MA", input$q+1, ": p = ", round(qplus1, 3)),
+#     sep = "<br>"
+#   ))
+#   
+# })
 
 
 }
