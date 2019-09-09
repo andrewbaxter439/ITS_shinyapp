@@ -42,6 +42,7 @@ ui <- fluidPage(
       column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
       column(6, downloadButton("dlppt", label = "Download .pptx")),
       column(6, align = "right", downloadButton("dlgraph", label = "Download image")),
+      downloadButton("downloadReport", label = "Download report"),
       p(".")
     ),
     
@@ -58,9 +59,9 @@ ui <- fluidPage(
                   tabPanel("Full Plot",
                            h3(textOutput(outputId = "minmax")),
                            plotOutput(outputId = "modelplot"),
-                           column(5, checkboxInput("ribbons", "Show confidence intervals", value = FALSE)),
-                           column(2, align = "center", p(htmlOutput(outputId = "rSquared"))),
-                           column(5, align = "right", p(textOutput(outputId = "corr"))),
+                           column(4, checkboxInput("ribbons", "Show confidence intervals", value = FALSE)),
+                           column(4, align = "center", p(htmlOutput(outputId = "rSquared"))),
+                           column(4, align = "right", p(textOutput(outputId = "corr"))),
                            column(12, align = "center", uiOutput(outputId = "equation")),
                            dataTableOutput(outputId = "modelsummary")
                            ),
