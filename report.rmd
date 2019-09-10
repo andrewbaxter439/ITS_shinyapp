@@ -4,7 +4,7 @@ output:
   #   df_print: paged
   #   theme: readable
   word_document:
-    # reference_docx: ITS_template2.docx
+    reference_docx: report_template.docx
     fig_width: 8
     fig_height: 6
   github_document: default
