@@ -57,6 +57,7 @@ printCoefficients <- function(model){
     select(Coefficient, Value, Std.Error, 'p-value') %>% 
     print()
 }
+# app server ---------------------------------------
 
 server <- function(input, output, session) {
   
@@ -433,7 +434,16 @@ server <- function(input, output, session) {
 
 # Outputs to display -----------------------------------------------------------------------------------------
 
-  output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(cor(dfd()$Predict, dfd()$Value),digits = 4))))
+  rSq <- reactive({signif(cor(dfd()$Predict, dfd()$Value),digits = 3)})
+  mspe <- reactive({
+    dfd() %>% 
+      mutate(spe = (Predict - Value)**2) %>% 
+      summarise(mspe = mean(spe)) %>% 
+      pull() %>% 
+      signif(3)
+  })
+
+  output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup> = ", rSq(), "; MSPE = ", mspe())))
   # output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
   
   interceptName <- reactive({
@@ -750,7 +760,7 @@ server <- function(input, output, session) {
             panel.grid = element_blank()) +
       ylab("Rate of pregnancies to under-18s, per 1,000") +
       xlab("Year") +
-      coord_cartesian(ylim = c(0, 60)) +
+      coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
       # coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
       # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
@@ -842,6 +852,27 @@ output$qplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALS
 #   ))
 #   
 # })
+
+
+# knit report ------------------------------------------------------------------------------------------------
+output$downloadReport <- downloadHandler(
+  filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".docx")},
+  content = function(file) {
+    tempReport <- file.path(tempdir(), "report.Rmd")
+    file.copy("report.Rmd", tempReport, overwrite = TRUE)
+    params <- list(
+    title = paste(input$main,
+          ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
+          input$obRange[1], "-",
+          input$obRange[2],
+          sep=" ")
+    )
+    rmarkdown::render(tempReport, output_file = file,
+                      params = params
+                      # envir = new.env(parent = globalenv()))
+    )
+  }
+)
 
 
 }

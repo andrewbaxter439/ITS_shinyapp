@@ -1,0 +1,31 @@
+---
+output:
+  # html_document:
+  #   df_print: paged
+  #   theme: readable
+  word_document:
+    reference_docx: report_template.docx
+    fig_width: 8
+    fig_height: 6
+  github_document: default
+    
+---
+
+---
+title: `r params$title`
+---
+```{r plot, echo = FALSE, messages = FALSE, warnings = FALSE}
+
+print(PlotInput())
+```
+
+`r corr()`
+
+MSPE = `r mspe()`
+
+R^2^ = `r rSq()`
+
+```{r model, echo = FALSE, messages = FALSE, warning = FALSE}
+knitr::kable(confintervals())
+
+```
