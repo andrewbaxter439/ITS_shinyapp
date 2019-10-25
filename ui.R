@@ -42,7 +42,9 @@ ui <- fluidPage(
       column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
       column(6, downloadButton("dlppt", label = "Download .pptx")),
       column(6, align = "right", downloadButton("dlgraph", label = "Download image")),
-      downloadButton("downloadReport", label = "Download report"),
+      p("."),
+      h4("Download analysis report (.docx)"),
+      column(6, downloadButton("downloadReport", label = "Download report")),
       p(".")
     ),
     
