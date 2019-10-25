@@ -1,4 +1,5 @@
 <!-- badges: start -->
+[![DOI](https://zenodo.org/badge/178061136.svg)](https://zenodo.org/badge/latestdoi/178061136)
 [![Travis build status](https://travis-ci.org/andrewbaxter439/ITS_shinyapp.svg?branch=master)](https://travis-ci.org/andrewbaxter439/ITS_shinyapp)
 <!-- badges: end -->
 
