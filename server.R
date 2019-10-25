@@ -870,7 +870,7 @@ output$downloadReport <- downloadHandler(
     rmarkdown::render(tempReport, output_file = file,
                       params = params,
                       output_format = "word_document"
-                      # output_options = list(reference_docx = "report_template.docx")
+                      # output_options = list(reference_docx = paste0(getwd(), "/report_template.docx"))
                       # output_format = rmarkdown::word_document(reference_docx = "report_template.docx")
                       # envir = new.env(parent = globalenv()))
     )

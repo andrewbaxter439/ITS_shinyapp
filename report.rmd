@@ -4,7 +4,7 @@ output:
   #   df_print: paged
   #   theme: readable
   word_document:
-    reference_docx: C:\Users\andre\OneDrive - University of Glasgow\R Studio - home folder\Teen_preg_UK_ITS\report_template.docx
+    # reference_docx: report_template.docx
     fig_width: 8
     fig_height: 6
   github_document: default

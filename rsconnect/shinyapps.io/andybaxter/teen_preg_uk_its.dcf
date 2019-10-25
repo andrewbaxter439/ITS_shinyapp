@@ -5,9 +5,9 @@ account: andybaxter
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 818876
-bundleId: 2378913
+bundleId: 2536989
 url: https://andybaxter.shinyapps.io/teen_preg_uk_its/
-when: 1567458269.46947
+when: 1572041450.2894
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: .RData|dlconfints.csv|shiny app to explore data.R
+ignoredFiles: .Rbuildignore|.RData|.travis.yml|tests
