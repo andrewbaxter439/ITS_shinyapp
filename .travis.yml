@@ -1,16 +1,17 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: R
-cache: 
+
+install:
+  - R -e 'if (system.file(package="packrat") == "") install.packages("packrat")'
+  - R -e "packrat::packify(); packrat::restore()"
+
+cache:
   packages: true
   directories:
     - packrat/lib
     - travis_phantomjs
-    
-install:
-  - R -e 'if (system.file(package="packrat") == "") install.packages("packrat")'
-  - R -e "packrat::packify(); packrat::restore()"
-  
+
   # Install PhantomJS (if not cached)
 before_install:
   - "export PHANTOMJS_VERSION=2.1.1"
