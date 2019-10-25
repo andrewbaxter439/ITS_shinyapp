@@ -8,7 +8,6 @@ output:
     fig_width: 8
     fig_height: 6
   github_document: default
-    
 ---
 
 ---
