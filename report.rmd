@@ -4,15 +4,15 @@ output:
   #   df_print: paged
   #   theme: readable
   word_document:
-    reference_docx: report_template.docx
+    reference_docx: C:\Users\andre\OneDrive - University of Glasgow\R Studio - home folder\Teen_preg_UK_ITS\report_template.docx
     fig_width: 8
     fig_height: 6
   github_document: default
+# params:
+#   set_title: none
+title: "`r params$set_title`"
 ---
 
----
-title: `r params$title`
----
 ```{r plot, echo = FALSE, messages = FALSE, warnings = FALSE}
 
 print(PlotInput())

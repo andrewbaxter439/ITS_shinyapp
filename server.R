@@ -861,14 +861,17 @@ output$downloadReport <- downloadHandler(
     tempReport <- file.path(tempdir(), "report.Rmd")
     file.copy("report.Rmd", tempReport, overwrite = TRUE)
     params <- list(
-    title = paste(input$main,
+    set_title = paste(input$main,
           ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
           input$obRange[1], "-",
           input$obRange[2],
           sep=" ")
     )
     rmarkdown::render(tempReport, output_file = file,
-                      params = params
+                      params = params,
+                      output_format = "word_document"
+                      # output_options = list(reference_docx = "report_template.docx")
+                      # output_format = rmarkdown::word_document(reference_docx = "report_template.docx")
                       # envir = new.env(parent = globalenv()))
     )
   }
