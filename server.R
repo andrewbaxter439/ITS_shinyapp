@@ -1,10 +1,4 @@
-list.of.packages <- c("tidyverse", "readxl", "broom", "nlme", "car", "svglite", "export")
-
-#checking missing packages from list
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-
-#install missing ones
-if(length(new.packages)) install.packages(new.packages, dependencies = TRUE)
+# list.of.packages <- c("tidyverse", "readxl", "broom", "nlme", "car", "svglite", "export", "XLConnect")
 
 require(tidyverse)
 require(readxl)
@@ -859,7 +853,9 @@ output$downloadReport <- downloadHandler(
   filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".docx")},
   content = function(file) {
     tempReport <- file.path(tempdir(), "report.Rmd")
+    tempTemplate <- file.path(tempdir(), "report_template.docx")
     file.copy("report.Rmd", tempReport, overwrite = TRUE)
+    file.copy("report_template.docx", tempTemplate, overwrite = TRUE)
     params <- list(
     set_title = paste(input$main,
           ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
@@ -869,7 +865,8 @@ output$downloadReport <- downloadHandler(
     )
     rmarkdown::render(tempReport, output_file = file,
                       params = params,
-                      output_format = "word_document"
+                      output_format = "word_document",
+                      output_options = list(reference_docx = tempTemplate)
                       # output_options = list(reference_docx = paste0(getwd(), "/report_template.docx"))
                       # output_format = rmarkdown::word_document(reference_docx = "report_template.docx")
                       # envir = new.env(parent = globalenv()))
