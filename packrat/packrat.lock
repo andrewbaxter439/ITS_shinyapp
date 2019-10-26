@@ -178,6 +178,12 @@ Hash: 98ff6c6b2ff30fd4007dd16c75027b30
 Requires: DBI, R6, assertthat, glue, rlang, purrr, tidyselect, tibble,
     dplyr
 
+Package: debugme
+Source: CRAN
+Version: 1.1.0
+Hash: c233690edd9fa17a63f7c8d83c1ca153
+Requires: crayon
+
 Package: digest
 Source: CRAN
 Version: 0.6.22
@@ -449,6 +455,12 @@ Source: CRAN
 Version: 0.5.0
 Hash: 498643e765d1442ba7b1160a1df3abf9
 
+Package: parsedate
+Source: CRAN
+Version: 1.2.0
+Hash: 289aca3d85861a48b5a91aa2c49fbe50
+Requires: rematch2
+
 Package: pbkrtest
 Source: CRAN
 Version: 0.4-7
@@ -460,6 +472,12 @@ Source: CRAN
 Version: 1.4.2
 Hash: 28ff1862b4e0c8761efca442e80a63d8
 Requires: crayon, fansi, rlang, utf8, cli, vctrs
+
+Package: pingr
+Source: CRAN
+Version: 2.0.0
+Hash: 4319194b72ee7820c54fbd284923f869
+Requires: processx
 
 Package: pkgconfig
 Source: CRAN
@@ -476,6 +494,16 @@ Source: CRAN
 Version: 1.8.4
 Hash: 5c3737d7c1846e30d40c8c38110b5fcd
 Requires: Rcpp
+
+Package: png
+Source: CRAN
+Version: 0.1-7
+Hash: 421d7d6e0fb4bd885ecbd909b6456b8b
+
+Package: praise
+Source: CRAN
+Version: 1.0.0
+Hash: 77da8f1df873a4b91e5c4a68fe2fb1b6
 
 Package: prettyunits
 Source: CRAN
@@ -539,6 +567,12 @@ Package: rematch
 Source: CRAN
 Version: 1.0.1
 Hash: ad4faf59e7611117ff165817074c50c7
+
+Package: rematch2
+Source: CRAN
+Version: 2.1.0
+Hash: 81eaeddde6cbc03e7d074e96bff4b9d6
+Requires: tibble
 
 Package: reprex
 Source: CRAN
@@ -631,11 +665,25 @@ RemoteUsername: rstudio
 RemoteRef: master
 RemoteSha: 1080cf0ef4c5b6576fcdfebad1c555dcba97ce3a
 
+Package: shinytest
+Source: CRAN
+Version: 1.3.1
+Hash: cc8a251b4a57d62f2d2367a2de90ef3b
+Requires: R6, assertthat, crayon, digest, jsonlite, rematch,
+    rstudioapi, withr, callr, htmlwidgets, httpuv, httr, shiny,
+    debugme, parsedate, pingr, testthat, webdriver
+
 Package: shinythemes
 Source: CRAN
 Version: 1.1.2
 Hash: b5eb2598708219fdfd4dcd65dae6d318
 Requires: shiny
+
+Package: showimage
+Source: CRAN
+Version: 1.0.0
+Hash: f058f6b423455d7267a39f920b1d1a64
+Requires: png
 
 Package: sourcetools
 Source: CRAN
@@ -678,6 +726,13 @@ Package: systemfonts
 Source: CRAN
 Version: 0.1.1
 Hash: ac1ec260f6d8907d0755ca5154607cfc
+
+Package: testthat
+Source: CRAN
+Version: 2.2.1
+Hash: ec68d8eb0203c88d5efa62e67fba2a97
+Requires: R6, crayon, digest, evaluate, magrittr, rlang, withr, cli,
+    praise
 
 Package: tibble
 Source: CRAN
@@ -733,6 +788,13 @@ Package: viridisLite
 Source: CRAN
 Version: 0.3.0
 Hash: 78bb072c4f9e729a283d4c40ec93f9c6
+
+Package: webdriver
+Source: CRAN
+Version: 1.0.5
+Hash: 886b77eebfb8ba4fbfa31935fb8fd19b
+Requires: R6, base64enc, curl, jsonlite, withr, callr, httr, debugme,
+    showimage
 
 Package: webshot
 Source: CRAN
