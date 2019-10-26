@@ -189,7 +189,7 @@ server <- function(input, output, session) {
 
   
   
-  all.UK.rates <- reactive({read_xlsx("Conception rates by age and country.xlsx", sheet = paste(input$ages))})
+  all.UK.rates <- reactive({read_xlsx("Conception_rates_by_age_and_country.xlsx", sheet = paste(input$ages))})
   output$fulldata <- renderDataTable(all.UK.rates())
   
   dfa <- reactive({
