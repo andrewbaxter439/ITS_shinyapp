@@ -671,13 +671,29 @@ server <- function(input, output, session) {
   
   PlotInput <- reactive({
     
+    maxy <- dfa2() %>% 
+      filter(Country != input$control) %>% 
+      summarise(max = max(Value) + 10) %>% 
+      pull()
+
+      ScoCol <- "#0072C6"
+      WalCol <- "#00AB39"
+    
      minlb <- floor(input$obRange[1]/5) * 5
      mxlb <- floor(max(dfc()$Year)/5) * 5
      
      mnlbTm <- unique(dfc()[which(dfc()$Year==minlb+5),]$Time)-5
      mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
     
-    dfd() %>% 
+     if (input$grey){
+       # dfd() <- dfd() %>% 
+         # filter(Year >= input$obRange[1])
+       
+       ScoCol <- "grey"
+       WalCol <- "grey"
+     }
+     
+    dfd()  %>%
       # arrange(by = Country) %>%
       # mutate(Predict = predict(modelGls_null(), .)) %>%  # Add Predicts for non-England
       ggplot(aes(
@@ -714,8 +730,21 @@ server <- function(input, output, session) {
         alpha= 0.5,
         size = 1,
         show.legend = FALSE) +
-      # Show all data points
-      geom_point(data=dfa2(), aes(Time, Value, col = Country), show.legend = FALSE, inherit.aes = FALSE) +
+      # control data points and trend line
+      geom_point(data=dfa2()%>% 
+                   filter(Country == input$control,
+                          Year >= ifelse(input$grey, input$obRange[1], min(dfa2()$Year))),
+                 aes(Time, Value, col = Country), 
+                 show.legend = FALSE,
+                 inherit.aes = FALSE) +
+      geom_line(data = . %>% filter(Country == input$control), aes(y=Predict), size = 1.5) +
+      # England data points and trend line
+      geom_point(data=dfa2()%>% 
+                   filter(Country != input$control),
+                 aes(Time, Value, col = Country), 
+                 show.legend = FALSE,
+                 inherit.aes = FALSE) +
+      geom_line(data = . %>% filter(Country != input$control), aes(y=Predict), size = 1.5) +
       # Counterfactual trend lines
       geom_line(
         data = modcfac(),
@@ -730,8 +759,6 @@ server <- function(input, output, session) {
         size = 1.5,
         inherit.aes = FALSE
       ) +
-      # Model trend lines
-      geom_line(aes(y=Predict), size = 1.5) +
       # Intervention time points
       geom_vline(xintercept = input$int1yr-input$obRange[1]+0.5,
                  linetype = "dotted",
@@ -754,7 +781,8 @@ server <- function(input, output, session) {
             panel.grid = element_blank()) +
       ylab("Rate of pregnancies to under-18s, per 1,000") +
       xlab("Year") +
-      coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
+      coord_cartesian(ylim = c(0, maxy)) +
+      # coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
       # coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
       # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
@@ -762,12 +790,13 @@ server <- function(input, output, session) {
       scale_colour_manual(
         breaks = c("England", "Wales", "Scotland", "England and Wales", "Prediction"),
         values = c("England" = "#CF142B",
-                   "Wales" = "#00AB39",
-                   "Scotland" = "#0072C6",
+                   "Wales" = WalCol,
+                   "Scotland" = ScoCol,
                    "England and Wales" = "#A50115",
                    "Prediction" = "#FFC000"),
         aesthetics = c("colour", "fill"))
   })
+  
   
   # autocorr tests ---------------------------------------------------------------------------------------------
 
