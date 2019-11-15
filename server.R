@@ -671,6 +671,8 @@ server <- function(input, output, session) {
   
   PlotInput <- reactive({
     
+    alpha <- ifelse(input$lines, 1, 0)
+    
     maxy <- dfa2() %>% 
       filter(Country != input$control) %>% 
       summarise(max = max(Value) + 10) %>% 
@@ -737,14 +739,14 @@ server <- function(input, output, session) {
                  aes(Time, Value, col = Country), 
                  show.legend = FALSE,
                  inherit.aes = FALSE) +
-      geom_line(data = . %>% filter(Country == input$control), aes(y=Predict), size = 1.5) +
+      geom_line(data = . %>% filter(Country == input$control), aes(y=Predict), size = 1.5, alpha = alpha) +
       # England data points and trend line
       geom_point(data=dfa2()%>% 
                    filter(Country != input$control),
                  aes(Time, Value, col = Country), 
                  show.legend = FALSE,
                  inherit.aes = FALSE) +
-      geom_line(data = . %>% filter(Country != input$control), aes(y=Predict), size = 1.5) +
+      geom_line(data = . %>% filter(Country != input$control), aes(y=Predict), size = 1.5, alpha = alpha) +
       # Counterfactual trend lines
       geom_line(
         data = modcfac(),
@@ -757,6 +759,7 @@ server <- function(input, output, session) {
         ),
         linetype = "longdash",
         size = 1.5,
+        alpha = alpha,
         inherit.aes = FALSE
       ) +
       # Intervention time points

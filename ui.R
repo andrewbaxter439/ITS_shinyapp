@@ -59,14 +59,23 @@ ui <- fluidPage(
                            ),
                   
                   tabPanel("Full Plot",
+                           div(id = "plot",
                            h3(textOutput(outputId = "minmax")),
-                           plotOutput(outputId = "modelplot"),
-                           column(4, p(checkboxInput("ribbons", "Show confidence intervals", value = FALSE)),
-                                     p(checkboxInput("grey", "Grey-out controls", value = FALSE))),
-                           column(4, align = "center", p(htmlOutput(outputId = "rSquared"))),
-                           column(4, align = "right", p(textOutput(outputId = "corr"))),
+                           plotOutput(outputId = "modelplot")
+                           ),
+                          div(id = "graph_info",
+                           column(6, align = "left", p(htmlOutput(outputId = "rSquared"))),
+                           column(6, align = "right", p(textOutput(outputId = "corr")))
+                          ),
+                           div(id = "graph_options",
+                           column(4, align = "left",  checkboxInput("ribbons", "Show confidence intervals", value = FALSE)),
+                          column(4, align = "center", checkboxInput("grey", "Grey-out controls", value = FALSE)),
+                          column(4, align = "right", checkboxInput("lines", "Show trend lines", value = TRUE))
+                           ),
+                          div(id = "equation",
                            column(12, align = "center", uiOutput(outputId = "equation")),
                            dataTableOutput(outputId = "modelsummary")
+                          )
                            ),
                   
                   tabPanel("Confidence Intervals",
