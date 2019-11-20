@@ -1,4 +1,15 @@
 ui <- fluidPage(
+  tags$head(
+    tags$style(
+      HTML(
+        "
+        #DataTables_Table_0 tr:hover{
+          background-color: #dddddd;
+        }
+        "
+      )
+    )
+  ),
   theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
   titlePanel("ITS analyses of England's Teenage Pregnancy Strategy"),
   withMathJax(),
@@ -73,9 +84,9 @@ ui <- fluidPage(
                           column(4, align = "right", checkboxInput("lines", "Show trend lines", value = TRUE))
                            ),
                           div(id = "equation",
-                           column(12, align = "center", uiOutput(outputId = "equation")),
+                           column(12, align = "center", uiOutput(outputId = "equation"))
+                          ),
                            dataTableOutput(outputId = "modelsummary")
-                          )
                            ),
                   
                   tabPanel("Confidence Intervals",
