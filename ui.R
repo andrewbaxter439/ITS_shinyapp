@@ -1,15 +1,15 @@
 ui <- fluidPage(
-  tags$head(
-    tags$style(
-      HTML(
-        "
-        #DataTables_Table_0 tr:hover{
-          background-color: #dddddd;
-        }
-        "
-      )
-    )
-  ),
+  # tags$head(
+  #   tags$style(
+  #     HTML(
+  #       "
+  #       #DataTables_Table_0 tr:hover{
+  #         background-color: #dddddd;
+  #       }
+  #       "
+  #     )
+  #   )
+  # ),
   theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
   titlePanel("ITS analyses of England's Teenage Pregnancy Strategy"),
   withMathJax(),
