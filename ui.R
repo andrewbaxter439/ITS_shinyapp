@@ -1,4 +1,5 @@
-ui <- fluidPage(
+ui <- function(request){
+   fluidPage(
   # tags$head(
   #   tags$style(
   #     HTML(
@@ -44,6 +45,9 @@ ui <- fluidPage(
                     label = "Phase-in",
                     value = FALSE),
       uiOutput("piyr1slider"),
+      checkboxInput(inputId = "parallel",
+                    label = "Parallel pre-intervention trends",
+                    value = FALSE),
       h4("Autoregression correction"),
       column(6, numericInput("p", "AR: ", 0, min = 0)),
       column(6, numericInput("q", "MA: ", 0, min = 0)),
@@ -53,9 +57,14 @@ ui <- fluidPage(
       column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
       column(6, downloadButton("dlppt", label = "Download .pptx")),
       column(6, align = "right", downloadButton("dlgraph", label = "Download image")),
-      p("."),
+      # p("."),
+      div(style = "position: relative; top: 20px",
       h4("Download analysis report (.docx)"),
-      column(6, downloadButton("downloadReport", label = "Download report")),
+      downloadButton("downloadReport", label = "Download report")
+      ),
+      div(style = "position: relative; top: 30px",
+      bookmarkButton("Save analysis", title = "Copy url with current values")
+      ),
       p(".")
     ),
     
@@ -91,6 +100,8 @@ ui <- fluidPage(
                   
                   tabPanel("Confidence Intervals",
                                       dataTableOutput((outputId = "confint")),
+                           textOutput("form1"),
+                           textOutput("form2"),
                            downloadButton("dlconfints")
                   ),
                   
@@ -112,3 +123,4 @@ ui <- fluidPage(
     )
   )
 )
+}

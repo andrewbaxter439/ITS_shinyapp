@@ -261,9 +261,33 @@ server <- function(input, output, session) {
     options = list(searching = FALSE)
   )
 
+# formula ----------------------------------------------------------------------------------------------------
+
+  mod_formula <- reactive({
+    formula(
+      paste0(
+        "Value ~ Time",
+        ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
+        " + Cat1 + Trend1",
+        ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
+        ifelse(input$int2,
+               paste0(" + Cat2 + Trend2",
+                      ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
+                      ),
+               ""
+               )
+      )
+    )
+  })
+  
+  output$form1 <- renderText({as.character(mod_formula())})
+  output$form2 <- renderText({as.character(modelGls_null()$call$model[3])})
+  
 # Construct model --------------------------------------------------------------------------------------------
 
   modelGls_null <- reactive({  # add if statements for each model
+    model1 <- mod_formula()
+    
     if (input$control == "none") {       # outer if - with/without control (x1)
       if (input$p == 0 & input$q == 0){  # second if - with or without ARMA correction (x2)
         if (input$int2) {                # innermost if - with or without second intervention (x2x2)
@@ -279,6 +303,7 @@ server <- function(input, output, session) {
           )
         } else {
           gls(
+            # model = model1,
             Value ~ Time +
               Cat1 +
               Trend1,
@@ -390,6 +415,7 @@ server <- function(input, output, session) {
          )
        } else {
          lm(
+           # model = mod_formula(),
            Value ~ Time +
              Cat1 +
              Trend1,
