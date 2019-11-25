@@ -100,8 +100,8 @@ ui <- function(request){
                   
                   tabPanel("Confidence Intervals",
                                       dataTableOutput((outputId = "confint")),
-                           textOutput("form1"),
-                           textOutput("form2"),
+                           # textOutput("form1"),
+                           # textOutput("form2"),
                            downloadButton("dlconfints")
                   ),
                   

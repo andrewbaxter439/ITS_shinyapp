@@ -55,9 +55,9 @@ printCoefficients <- function(model){
 
 server <- function(input, output, session) {
   
-
-# Reactive inputs -------------------------------------------------------------------------------------------
-
+  
+  # Reactive inputs -------------------------------------------------------------------------------------------
+  
   observeEvent(input$go2graph, {
     updateTabsetPanel(session, "session", selected = "Full Plot")
   })
@@ -65,9 +65,9 @@ server <- function(input, output, session) {
   output$dlgraph <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".", input$format)},
     content = function(file) {
-                                     ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)
-  },
-  contentType = paste0("image/", input$format)
+      ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)
+    },
+    contentType = paste0("image/", input$format)
   )
   
   output$dlppt <- downloadHandler(
@@ -75,22 +75,22 @@ server <- function(input, output, session) {
     content = function(file){graph2ppt(PlotInput() + theme(text = element_text(size = 16), line = element_blank()), file = file, height = input$height/25.4, width = input$width/25.4)}
   )
   
-
   
-    output$dlconfints <- downloadHandler(
+  
+  output$dlconfints <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".xlsx")},
     content = function(file) {
-     fname <- paste(file,"xlsx",sep=".")
-     wb <- loadWorkbook(fname, create = TRUE)
-     createSheet(wb, name = "model")
-     createSheet(wb, name = "data")
-     createSheet(wb, name = "counterfactual")
-     writeWorksheet(wb, confintervals(), sheet = "model")
-     writeWorksheet(wb, dfd(), sheet = "data")
-     writeWorksheet(wb, modcfac(), sheet = "counterfactual")
-     saveWorkbook(wb)
-     file.rename(fname,file)
-      },
+      fname <- paste(file,"xlsx",sep=".")
+      wb <- loadWorkbook(fname, create = TRUE)
+      createSheet(wb, name = "model")
+      createSheet(wb, name = "data")
+      createSheet(wb, name = "counterfactual")
+      writeWorksheet(wb, confintervals(), sheet = "model")
+      writeWorksheet(wb, dfd(), sheet = "data")
+      writeWorksheet(wb, modcfac(), sheet = "counterfactual")
+      saveWorkbook(wb)
+      file.rename(fname,file)
+    },
     contentType = "file/xlsx"
   )
   
@@ -150,8 +150,8 @@ server <- function(input, output, session) {
                 value = input$int1yr+1)
   })
   
-# Start and end years ----------------------------------------------------------------------------------------
-
+  # Start and end years ----------------------------------------------------------------------------------------
+  
   
   minYr <- reactive({
     dfa() %>% 
@@ -174,9 +174,9 @@ server <- function(input, output, session) {
           input$obRange[2],
           sep=" ")
   })
-
-# Phase-in period --------------------------------------------------------------------------------------------
-
+  
+  # Phase-in period --------------------------------------------------------------------------------------------
+  
   startYr <- reactive({  # start of intervention offset by phase-in year
     if (input$pi1) {
       input$pi1yr+1 
@@ -185,8 +185,8 @@ server <- function(input, output, session) {
     }
   })
   
-# Dataframe setup --------------------------------------------------------------------------------------------
-
+  # Dataframe setup --------------------------------------------------------------------------------------------
+  
   
   
   all.UK.rates <- reactive({read_xlsx("Conception_rates_by_age_and_country.xlsx", sheet = paste(input$ages))})
@@ -201,7 +201,7 @@ server <- function(input, output, session) {
         Year = as.numeric(Year),
         Time = Year - min(Year) + 1,
         England = ifelse(Country == input$main, 1, 0)
-        )    %>%    
+      )    %>%    
       mutate(Time_Eng = Time*England)
   })
   
@@ -210,8 +210,8 @@ server <- function(input, output, session) {
       mutate(Time = Year - input$obRange[1] + 1,
              Time_Eng = Time*England)
   })
-
-
+  
+  
   dfaPI <- reactive({
     if (input$pi1) {
       dfa2() %>% 
@@ -223,11 +223,11 @@ server <- function(input, output, session) {
   
   
   dfb <- reactive({
-      dfaPI() %>% 
-        mutate(Cat1 = ifelse(Year < input$int1yr, 0, 1),
-               Trend1 = ifelse(Cat1 == 0, 0, Year - startYr() + 1)
-        ) %>%
-        mutate_at(., colnames(.)[7:8], list(Eng = ~ .*England)) 
+    dfaPI() %>% 
+      mutate(Cat1 = ifelse(Year < input$int1yr, 0, 1),
+             Trend1 = ifelse(Cat1 == 0, 0, Year - startYr() + 1)
+      ) %>%
+      mutate_at(., colnames(.)[7:8], list(Eng = ~ .*England)) 
   })
   
   dfc <- reactive({
@@ -260,33 +260,33 @@ server <- function(input, output, session) {
     (arrange(dfc(), by=Year)),
     options = list(searching = FALSE)
   )
-
-# formula ----------------------------------------------------------------------------------------------------
-
-  mod_formula <- reactive({
-    formula(
-      paste0(
-        "Value ~ Time",
-        ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
-        " + Cat1 + Trend1",
-        ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
-        ifelse(input$int2,
-               paste0(" + Cat2 + Trend2",
-                      ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
-                      ),
-               ""
-               )
-      )
-    )
-  })
   
-  output$form1 <- renderText({as.character(mod_formula())})
-  output$form2 <- renderText({as.character(modelGls_null()$call$model[3])})
+  # formula # NOT WORKING ----------------------------------------------------------------------------------------------
   
-# Construct model --------------------------------------------------------------------------------------------
-
+  # mod_formula <- 
+  #   reactive({
+  #   formula(
+  #     paste0(
+  #       "Value ~ Time",
+  #       ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
+  #       " + Cat1 + Trend1",
+  #       ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
+  #       ifelse(input$int2,
+  #              paste0(" + Cat2 + Trend2",
+  #                     ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
+  #              ),
+  #              ""
+  #       )
+  #     )
+  #   )
+  # })
+  # 
+  # output$form1 <- renderText({as.character(mod_formula())})
+  # output$form2 <- renderText({as.character(modelGls_null()$call$model[3])})
+  
+  # Construct model --------------------------------------------------------------------------------------------
+  
   modelGls_null <- reactive({  # add if statements for each model
-    model1 <- mod_formula()
     
     if (input$control == "none") {       # outer if - with/without control (x1)
       if (input$p == 0 & input$q == 0){  # second if - with or without ARMA correction (x2)
@@ -332,7 +332,66 @@ server <- function(input, output, session) {
               correlation =  corARMA(p=input$p, q=input$q, form = ~ Time),
               method = "ML"
             )}
-        
+
+      }
+    } else if (input$parallel) {
+      if (input$p == 0 & input$q == 0){
+        if (input$int2) {
+          gls(
+            Value ~ Time +
+              England +
+              Cat1 +
+              Trend1 +
+              Cat1_Eng +
+              Trend1_Eng +
+              Cat2 +
+              Trend2 +
+              Cat2_Eng +
+              Trend2_Eng,
+            data = dfc(),
+            correlation = NULL,
+            method = "ML"
+          )} else {
+            gls(
+              Value ~ Time +
+                England +
+                Cat1 +
+                Trend1 +
+                Cat1_Eng +
+                Trend1_Eng,
+              data = dfc(),
+              correlation =  NULL,
+              method = "ML"
+            )}
+      } else {
+        if (input$int2) {
+          gls(
+            Value ~ Time +
+              England +
+              Cat1 +
+              Trend1 +
+              Cat1_Eng +
+              Trend1_Eng +
+              Cat2 +
+              Trend2 +
+              Cat2_Eng +
+              Trend2_Eng,
+            data = dfc(),
+            correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
+            method = "ML"
+          )} else {
+            gls(
+              Value ~ Time +
+                England +
+                Cat1 +
+                Trend1 +
+                Cat1_Eng +
+                Trend1_Eng,
+              data = dfc(),
+              correlation =  corARMA(p=input$p, q=input$q, form = ~ Time | England),
+              method = "ML"
+            )}
+
       }
     } else {
       if (input$p == 0 & input$q == 0){
@@ -395,65 +454,65 @@ server <- function(input, output, session) {
               correlation =  corARMA(p=input$p, q=input$q, form = ~ Time | England),
               method = "ML"
             )}
-        
+
       }
     }
   })
   
-# Simple linear model ----------------------------------------------------------------------------------------
-
-   modelGls <- reactive({  # model to check for autocorrelation
-     if (input$control == "none") {
-       if (input$int2) {
-         lm(
-           Value ~ Time +
-             Cat1 +
-             Trend1 +
-             Cat2 +
-             Trend2,
-           data = dfc()
-         )
-       } else {
-         lm(
-           # model = mod_formula(),
-           Value ~ Time +
-             Cat1 +
-             Trend1,
-           data = dfc()
-         )
-       }
-     } else {
-       if (input$int2) {
-         lm(
-           Value ~ Time +
-             England +
-             Time_Eng +
-             Cat1 +
-             Trend1 +
-             Cat1_Eng +
-             Trend1_Eng +
-             Cat2 +
-             Trend2 +
-             Cat2_Eng +
-             Trend2_Eng,
-           data = dfc()
-         )} else {
-           lm(
-             Value ~ Time +
-               England +
-               Time_Eng +
-               Cat1 +
-               Trend1 +
-               Cat1_Eng +
-               Trend1_Eng,
-             data = dfc()
-           )}
-     }
-   })
-
-
-# Outputs to display -----------------------------------------------------------------------------------------
-
+  # Simple linear model ----------------------------------------------------------------------------------------
+  
+  modelGls <- reactive({  # model to check for autocorrelation
+    if (input$control == "none") {
+      if (input$int2) {
+        lm(
+          Value ~ Time +
+            Cat1 +
+            Trend1 +
+            Cat2 +
+            Trend2,
+          data = dfc()
+        )
+      } else {
+        lm(
+          # model = mod_formula(),
+          Value ~ Time +
+            Cat1 +
+            Trend1,
+          data = dfc()
+        )
+      }
+    } else {
+      if (input$int2) {
+        lm(
+          Value ~ Time +
+            England +
+            Time_Eng +
+            Cat1 +
+            Trend1 +
+            Cat1_Eng +
+            Trend1_Eng +
+            Cat2 +
+            Trend2 +
+            Cat2_Eng +
+            Trend2_Eng,
+          data = dfc()
+        )} else {
+          lm(
+            Value ~ Time +
+              England +
+              Time_Eng +
+              Cat1 +
+              Trend1 +
+              Cat1_Eng +
+              Trend1_Eng,
+            data = dfc()
+          )}
+    }
+  })
+  
+  
+  # Outputs to display -----------------------------------------------------------------------------------------
+  
   rSq <- reactive({signif(cor(dfd()$Predict, dfd()$Value),digits = 3)})
   mspe <- reactive({
     dfd() %>% 
@@ -462,7 +521,7 @@ server <- function(input, output, session) {
       pull() %>% 
       signif(3)
   })
-
+  
   output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup> = ", rSq(), "; MSPE = ", mspe())))
   # output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
   
@@ -474,9 +533,9 @@ server <- function(input, output, session) {
     }
   })
   
-
-# Naming model table -----------------------------------------------------------------------------------------
-
+  
+  # Naming model table -----------------------------------------------------------------------------------------
+  
   
   
   modelTable <- reactive({  # labelling coefficients
@@ -516,9 +575,9 @@ server <- function(input, output, session) {
       paste0("\U03B2", "4"),
       paste0("\U03B2", "5"),
       paste0("\U03B2", "6"),
-      paste0("\U03B2", "6"),
       paste0("\U03B2", "7"),
       paste0("\U03B2", "8"),
+      paste0("\U03B2", "9"),
       paste0("\U03B2", "10"),
       paste0("\U03B2", "11")
       # withMathJax("\\(\\beta_0\\)"),
@@ -546,7 +605,7 @@ server <- function(input, output, session) {
     
   })
   
-# Outputting tables ------------------------------------------------------------------------------------------
+  # Outputting tables ------------------------------------------------------------------------------------------
   
   output$confint<- renderDataTable(confintervals() %>% select(-Std.Error), 
                                    options = list(searching = FALSE, paging = FALSE, info = FALSE))
@@ -568,63 +627,63 @@ server <- function(input, output, session) {
   
   modcfac_base <- reactive({
     if(input$control == "none"){
-    if(input$int2) {
-      tibble(
-        Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
-        Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
-        Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
-        Cat2       = 0,
-        Trend2     = 0
-      ) 
+      if(input$int2) {
+        tibble(
+          Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
+          Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
+          Cat2       = 0,
+          Trend2     = 0
+        ) 
+      } else {
+        tibble(
+          Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Cat1       = 0,
+          Trend1     = 0,
+          Cat2       = 0,
+          Trend2     = 0
+        )
+      }
     } else {
-      tibble(
-        Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
-        Cat1       = 0,
-        Trend1     = 0,
-        Cat2       = 0,
-        Trend2     = 0
-      )
+      if(input$int2) {
+        tibble(
+          Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          England    = 1,
+          Time_Eng   = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Cat1       = 1,
+          Trend1     = c(1:(maxYr()-startYr()+1)),
+          Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
+          Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr()-input$int2yr+1)), 
+          Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
+          Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
+          Cat2_Eng   = 0,
+          Trend2_Eng = 0
+          # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
+        ) 
+      } else {
+        tibble(
+          Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          England    = 1,
+          Time_Eng   = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Cat1       = 1,
+          Trend1     = c(1:(maxYr()-startYr()+1)),
+          Cat2       = 0,
+          Trend2     = 0,
+          Cat1_Eng   = 0,
+          Trend1_Eng = 0,
+          Cat2_Eng   = 0,
+          Trend2_Eng = 0
+          # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
+        )
+      }
     }
-    } else {
-    if(input$int2) {
-      tibble(
-        Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
-        England    = 1,
-        Time_Eng   = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
-        Cat1       = 1,
-        Trend1     = c(1:(maxYr()-startYr()+1)),
-        Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
-        Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr()-input$int2yr+1)), 
-        Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
-        Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
-        Cat2_Eng   = 0,
-        Trend2_Eng = 0
-        # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
-      ) 
-    } else {
-      tibble(
-        Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
-        England    = 1,
-        Time_Eng   = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
-        Cat1       = 1,
-        Trend1     = c(1:(maxYr()-startYr()+1)),
-        Cat2       = 0,
-        Trend2     = 0,
-        Cat1_Eng   = 0,
-        Trend1_Eng = 0,
-        Cat2_Eng   = 0,
-        Trend2_Eng = 0
-        # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
-      )
-    }
-  }
-    })
+  })
   
-
+  
   modcfac <- reactive({
     left_join(modcfac_base(), constructCIRibbon(modcfac_base(), modelGls_null()))
   })
-
+  
   
   output$cfac <- renderDataTable(modcfac())
   
@@ -640,21 +699,24 @@ server <- function(input, output, session) {
   
   output$dfd <- renderDataTable(dfd())
   
-
+  
   # Output equation --------------------------------------------------------------------------------------------
   output$equation <- renderUI({
-  eqtext <-   if (!input$int2){
+    eqtext <-   if (!input$int2){
       if (input$control == "none") {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention+\\beta_3*Trend+\\epsilon$$"
-      } else {
+      } else if (!input$parallel) {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Group+\\beta_3*Group*Time+\\beta_4*Intervention+$$
         $$\\beta_5*Trend+\\beta_6*Intervention*Group+\\beta_7*Trend*Group+\\epsilon$$"
+      } else {
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Group+\\beta_3*Intervention+$$
+        $$\\beta_4*Trend+\\beta_5*Intervention*Group+\\beta_6*Trend*Group+\\epsilon$$"
       }
     } else {
       if (input$control == "none") {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention_1+\\beta_3*Trend_1+$$
         $$\\beta_4*Intervention_2+\\beta_5*Trend_2+\\epsilon$$"
-      } else {
+      } else if (!input$parallel) {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+
         \\beta_2*Group+
         \\beta_3*Group*Time+
@@ -667,9 +729,21 @@ server <- function(input, output, session) {
         \\beta_{10}*Group*Intervention_2+
         \\beta_{11}*Group*Trend_2+
         \\epsilon$$" 
+      } else {
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+
+        \\beta_2*Group+
+        \\beta_3*Intervention_1+
+        \\beta_4*Trend_1+$$
+        $$\\beta_5*Group*Intervention_1+
+        \\beta_6*Group*Trend_1+
+        \\beta_7*Intervention_2+$$
+        $$\\beta_8*Trend_2+
+        \\beta_9*Group*Intervention_2+
+        \\beta_{10}*Group*Trend_2+
+        \\epsilon$$" 
       }
     }
-  return(withMathJax(eqtext))
+    return(withMathJax(eqtext))
     #   eq1 <- "\\beta_2*Intervention_1+\\beta_3*Trend_1+"
     #   eq3 <- "\\beta_2*Intervention_1+\\beta_3*Trend_1+"
     # } else {
@@ -703,24 +777,24 @@ server <- function(input, output, session) {
       filter(Country != input$control) %>% 
       summarise(max = max(Value) + 10) %>% 
       pull()
-
-      ScoCol <- "#0072C6"
-      WalCol <- "#00AB39"
     
-     minlb <- floor(input$obRange[1]/5) * 5
-     mxlb <- floor(max(dfc()$Year)/5) * 5
-     
-     mnlbTm <- unique(dfc()[which(dfc()$Year==minlb+5),]$Time)-5
-     mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
+    ScoCol <- "#0072C6"
+    WalCol <- "#00AB39"
     
-     if (input$grey){
-       # dfd() <- dfd() %>% 
-         # filter(Year >= input$obRange[1])
-       
-       ScoCol <- "grey"
-       WalCol <- "grey"
-     }
-     
+    minlb <- floor(input$obRange[1]/5) * 5
+    mxlb <- floor(max(dfc()$Year)/5) * 5
+    
+    mnlbTm <- unique(dfc()[which(dfc()$Year==minlb+5),]$Time)-5
+    mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
+    
+    if (input$grey){
+      # dfd() <- dfd() %>% 
+      # filter(Year >= input$obRange[1])
+      
+      ScoCol <- "grey"
+      WalCol <- "grey"
+    }
+    
     dfd()  %>%
       # arrange(by = Country) %>%
       # mutate(Predict = predict(modelGls_null(), .)) %>%  # Add Predicts for non-England
@@ -799,7 +873,7 @@ server <- function(input, output, session) {
         xmin = input$int1yr-input$obRange[1]+0.5,
         xmax = input$pi1yr-input$obRange[1]+1.5,
         ymin = 0,
-        ymax = ylim()[2],
+        ymax = ylim()[2] + 10,
         fill = ifelse(input$pi1, "grey", NA),
         alpha = 0.01,
         inherit.aes = FALSE
@@ -828,12 +902,12 @@ server <- function(input, output, session) {
   
   
   # autocorr tests ---------------------------------------------------------------------------------------------
-
+  
   
   output$dwt <- renderDataTable(
     (
-    data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
-       ),
+      data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
+    ),
     options = list(searching = FALSE, paging = FALSE, info = FALSE)
   )
   
@@ -858,79 +932,79 @@ server <- function(input, output, session) {
   
   modelText <- reactive({paste0("AR", input$p, ", MA", input$q)})
   
-corr <- reactive({
-  paste0("Autocorrelation correction: ", ifelse(input$p == 0 & input$q == 0, "none", modelText()))
-})  
-
-output$corr <- renderText(corr())
-
-pplus1_text <- renderText({paste0("AR", input$p+1, ", MA", input$q)})
-
-output$pplus1_title <- renderText({paste0("ANOVA comparison with model ", pplus1_text(), ":")})
-
-output$pplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {modelGls_null() %>% 
-    update(correlation = corARMA(p = input$p + 1, q = input$q,
-                                 form = ~ Time | England)) %>% 
-    anova(modelGls_null(),.)%>% 
-    mutate(call = c(modelText(), pplus1_text())) })
-
-qplus1_text <- renderText({paste0("AR", input$p, ", MA", input$q+1)})
-
-output$qplus1_title <- renderText({paste0("ANOVA comparison with model ", qplus1_text(), ":")})
-
-output$qplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {modelGls_null() %>% 
-    update(correlation = corARMA(p = input$p, q = input$q + 1,
-                                 form = ~ Time | England)) %>% 
-    anova(modelGls_null(),.)%>% 
-    mutate(call = c(modelText(), qplus1_text()))
+  corr <- reactive({
+    paste0("Autocorrelation correction: ", ifelse(input$p == 0 & input$q == 0, "none", modelText()))
+  })  
+  
+  output$corr <- renderText(corr())
+  
+  pplus1_text <- renderText({paste0("AR", input$p+1, ", MA", input$q)})
+  
+  output$pplus1_title <- renderText({paste0("ANOVA comparison with model ", pplus1_text(), ":")})
+  
+  output$pplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {modelGls_null() %>% 
+      update(correlation = corARMA(p = input$p + 1, q = input$q,
+                                   form = ~ Time | England)) %>% 
+      anova(modelGls_null(),.)%>% 
+      mutate(call = c(modelText(), pplus1_text())) })
+  
+  qplus1_text <- renderText({paste0("AR", input$p, ", MA", input$q+1)})
+  
+  output$qplus1_title <- renderText({paste0("ANOVA comparison with model ", qplus1_text(), ":")})
+  
+  output$qplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {modelGls_null() %>% 
+      update(correlation = corARMA(p = input$p, q = input$q + 1,
+                                   form = ~ Time | England)) %>% 
+      anova(modelGls_null(),.)%>% 
+      mutate(call = c(modelText(), qplus1_text()))
   })
-
-
-
-# output$corrcompare <- renderUI({
-#   pplus1 <- modelGls_null() %>% 
-#     update(correlation = corARMA(p = input$p + 1, q = input$q,
-#                                  form = ~ Time | England)) %>% 
-#     anova(modelGls_null()) %>% .[2, 'p-value']
-#   qplus1 <- modelGls_null() %>% 
-#     update(correlation = corARMA(p = input$p, q = input$q + 1,
-#                                  form = ~ Time | England)) %>% 
-#     anova(modelGls_null()) %>% .[2, 'p-value']
-#   HTML(paste(
-#     corr(),
-#     paste0("ANOVA comparison with model AR", input$p+1, ", MA", input$q, ": p = ", round(pplus1, 3)),
-#     paste0("ANOVA comparison with model AR", input$p, ", MA", input$q+1, ": p = ", round(qplus1, 3)),
-#     sep = "<br>"
-#   ))
-#   
-# })
-
-
-# knit report ------------------------------------------------------------------------------------------------
-output$downloadReport <- downloadHandler(
-  filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".docx")},
-  content = function(file) {
-    tempReport <- file.path(tempdir(), "report.Rmd")
-    tempTemplate <- file.path(tempdir(), "report_template.docx")
-    file.copy("report.Rmd", tempReport, overwrite = TRUE)
-    file.copy("report_template.docx", tempTemplate, overwrite = TRUE)
-    params <- list(
-    set_title = paste(input$main,
-          ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
-          input$obRange[1], "-",
-          input$obRange[2],
-          sep=" ")
-    )
-    rmarkdown::render(tempReport, output_file = file,
-                      params = params,
-                      output_format = "word_document",
-                      output_options = list(reference_docx = tempTemplate)
-                      # output_options = list(reference_docx = paste0(getwd(), "/report_template.docx"))
-                      # output_format = rmarkdown::word_document(reference_docx = "report_template.docx")
-                      # envir = new.env(parent = globalenv()))
-    )
-  }
-)
-
-
+  
+  
+  
+  # output$corrcompare <- renderUI({
+  #   pplus1 <- modelGls_null() %>% 
+  #     update(correlation = corARMA(p = input$p + 1, q = input$q,
+  #                                  form = ~ Time | England)) %>% 
+  #     anova(modelGls_null()) %>% .[2, 'p-value']
+  #   qplus1 <- modelGls_null() %>% 
+  #     update(correlation = corARMA(p = input$p, q = input$q + 1,
+  #                                  form = ~ Time | England)) %>% 
+  #     anova(modelGls_null()) %>% .[2, 'p-value']
+  #   HTML(paste(
+  #     corr(),
+  #     paste0("ANOVA comparison with model AR", input$p+1, ", MA", input$q, ": p = ", round(pplus1, 3)),
+  #     paste0("ANOVA comparison with model AR", input$p, ", MA", input$q+1, ": p = ", round(qplus1, 3)),
+  #     sep = "<br>"
+  #   ))
+  #   
+  # })
+  
+  
+  # knit report ------------------------------------------------------------------------------------------------
+  output$downloadReport <- downloadHandler(
+    filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".docx")},
+    content = function(file) {
+      tempReport <- file.path(tempdir(), "report.Rmd")
+      tempTemplate <- file.path(tempdir(), "report_template.docx")
+      file.copy("report.Rmd", tempReport, overwrite = TRUE)
+      file.copy("report_template.docx", tempTemplate, overwrite = TRUE)
+      params <- list(
+        set_title = paste(input$main,
+                          ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
+                          input$obRange[1], "-",
+                          input$obRange[2],
+                          sep=" ")
+      )
+      rmarkdown::render(tempReport, output_file = file,
+                        params = params,
+                        output_format = "word_document",
+                        output_options = list(reference_docx = tempTemplate)
+                        # output_options = list(reference_docx = paste0(getwd(), "/report_template.docx"))
+                        # output_format = rmarkdown::word_document(reference_docx = "report_template.docx")
+                        # envir = new.env(parent = globalenv()))
+      )
+    }
+  )
+  
+  
 }
