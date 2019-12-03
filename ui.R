@@ -83,6 +83,7 @@ ui <- function(request){
                            h3(textOutput(outputId = "minmax")),
                            plotOutput(outputId = "modelplot")
                            ),
+                           # textOutput("form1"),
                           div(id = "graph_info",
                            column(6, align = "left", p(htmlOutput(outputId = "rSquared"))),
                            column(6, align = "right", p(textOutput(outputId = "corr")))
@@ -100,7 +101,6 @@ ui <- function(request){
                   
                   tabPanel("Confidence Intervals",
                                       dataTableOutput((outputId = "confint")),
-                           # textOutput("form1"),
                            # textOutput("form2"),
                            downloadButton("dlconfints")
                   ),

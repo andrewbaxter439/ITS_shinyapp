@@ -262,9 +262,8 @@ server <- function(input, output, session) {
   )
   
   # formula # NOT WORKING ----------------------------------------------------------------------------------------------
-  
-  # mod_formula <- 
-  #   reactive({
+  # 
+  # mod_formula <- reactive({
   #   formula(
   #     paste0(
   #       "Value ~ Time",
@@ -287,6 +286,17 @@ server <- function(input, output, session) {
   # Construct model --------------------------------------------------------------------------------------------
   
   modelGls_null <- reactive({  # add if statements for each model
+    
+  ### Not working - call to external formula
+  #   req(mod_formula())
+  #   gls(mod_formula(),
+  #       data = dfc(),
+  #       correlation = NULL,
+  #       method = "ML"
+  #       )
+  # })
+  # 
+  #   nullfunct <- reactive({
     
     if (input$control == "none") {       # outer if - with/without control (x1)
       if (input$p == 0 & input$q == 0){  # second if - with or without ARMA correction (x2)
@@ -882,10 +892,10 @@ server <- function(input, output, session) {
       theme(panel.background = element_blank(),
             legend.key  = element_blank(),
             panel.grid = element_blank()) +
-      ylab("Rate of pregnancies to under-18s, per 1,000") +
+      ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
-      coord_cartesian(ylim = c(0, maxy)) +
-      # coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
+      # coord_cartesian(ylim = c(0, maxy)) +
+      coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
       # coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
       # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
