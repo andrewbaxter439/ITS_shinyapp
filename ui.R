@@ -55,17 +55,24 @@ ui <- function(request){
       column(4, numericInput("width", "Width (mm)", 200)),
       column(4, numericInput("height", "Height (mm)", 150)),
       column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
-      column(6, downloadButton("dlppt", label = "Download .pptx")),
-      column(6, align = "right", downloadButton("dlgraph", label = "Download image")),
-      # p("."),
-      div(style = "position: relative; top: 20px",
-      h4("Download analysis report (.docx)"),
-      downloadButton("downloadReport", label = "Download report")
+      fluidRow(
+      column(6, 
+      downloadButton("dlppt", label = "Download .pptx")
+             ),
+      column(6,
+      downloadButton("dlgraph", label = "Download image")
+      )
       ),
-      div(style = "position: relative; top: 30px",
-      bookmarkButton("Save analysis", title = "Copy url with current values")
-      ),
-      p(".")
+      br(),
+      fluidRow(
+        h4("Download analysis report (.docx)"),
+        column(6, 
+               downloadButton("downloadReport", label = "Download report")
+        ),
+        column(6,
+               bookmarkButton("Save analysis", title = "Copy url with current values")
+        ),
+      )
     ),
     
     
