@@ -1,7 +1,6 @@
-# list.of.packages <- c("tidyverse", "readxl", "broom", "nlme", "car", "svglite", "export", "XLConnect")
+# list.of.packages <- c("tidyverse", "broom", "nlme", "car", "svglite", "export", "XLConnect")
 
 require(tidyverse)
-require(readxl)
 require(broom)
 require(nlme)
 require(car)
