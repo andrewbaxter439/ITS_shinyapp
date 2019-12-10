@@ -187,15 +187,13 @@ server <- function(input, output, session) {
   
   # Dataframe setup --------------------------------------------------------------------------------------------
   
-  
-  
-  all.UK.rates <- reactive({read_xlsx("Conception_rates_by_age_and_country.xlsx", sheet = paste(input$ages))})
-  output$fulldata <- renderDataTable(all.UK.rates())
+  load("data/all_uk_rates.rdata")
+  output$fulldata <- renderDataTable(all_UK_rates[[input$ages]])
   
   dfa <- reactive({
-    all.UK.rates() %>% filter(Country == input$main |
-                                Country == input$control) %>%
-      gather("Year", "Value",-1) %>%
+    all_UK_rates[[input$ages]] %>% 
+      filter(Country == input$main |
+               Country == input$control) %>%
       filter(!is.na(Value)) %>%
       mutate(
         Year = as.numeric(Year),
