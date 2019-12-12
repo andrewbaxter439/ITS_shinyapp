@@ -580,18 +580,6 @@ server <- function(input, output, session) {
       paste0("\U03B2", "10"),
       paste0("\U03B2", "11"),
       paste0("\U03B2", "12")
-      # withMathJax("\\(\\beta_0\\)"),
-      # withMathJax("\\(\\beta_1\\)"),
-      # withMathJax("\\(\\beta_2\\)"),
-      # withMathJax("\\(\\beta_3\\)"),
-      # withMathJax("\\(\\beta_4\\)"),
-      # withMathJax("\\(\\beta_5\\)"),
-      # withMathJax("\\(\\beta_6\\)"),
-      # withMathJax("\\(\\beta_7\\)"),
-      # withMathJax("\\(\\beta_8\\)"),
-      # withMathJax("\\(\\beta_9\\)"),
-      # withMathJax("\\(\\beta_{10}\\)"),
-      # withMathJax("\\(\\beta_{11}\\)")
     )
     )
     
@@ -707,36 +695,13 @@ server <- function(input, output, session) {
 
 
   dfd <- reactive({
-model <- modelGls_null()
-model$call[[2]] <- mod_formula()
-  #   newdata <- dfc() %>%
-  #     mutate(Predict = predict(modelGls_null()
-  #                              )
-  #            )
-  # 
-  #   mm <- model.matrix(form,
-  #                      # mm <- model.matrix(as.formula(paste0("~ ", model$call$model[3])),
-  #                      # mm <- model.matrix(formula(str_remove(model$call$model[[2]], "Value ")),
-  #                      data = newdata)
-  # 
-  #   vars <- mm %*% vcov(modelGls()) %*% t(mm)
-  #   sds <- sqrt(diag(vars))
-  #   newdata <- newdata %>% mutate(se = sds,
-  #                                 lowCI = Predict - 1.96 * sds,
-  #                                 HiCI = Predict + 1.96 * sds)
-  #   
-  #   left_join(dfc(), newdata) %>% 
-  #     arrange(by = Country) %>% 
-  #     mutate(Predict = predict(modelGls_null())) %>% 
-  #     filter(England == 1, Year >= startYr())
-  #   
-  # })
-  # 
-  # 
-  # dfdUFF <- reactive({
-  left_join(dfc(), constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null(), mod_formula())) %>%
-    arrange(by = Country) %>%
-    mutate(Predict = predict(model, newdata = .))# Add Predicts for non-England
+    model <- modelGls_null()
+    model$call[[2]] <- mod_formula()
+    
+    
+    left_join(dfc(), constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null(), mod_formula())) %>%
+      arrange(by = Country) %>%
+      mutate(Predict = predict(model, newdata = .))# Add Predicts for non-England
   })
   
   output$dfd <- renderDataTable(dfd())
@@ -786,22 +751,8 @@ model$call[[2]] <- mod_formula()
       }
     }
     return(withMathJax(eqtext))
-    #   eq1 <- "\\beta_2*Intervention_1+\\beta_3*Trend_1+"
-    #   eq3 <- "\\beta_2*Intervention_1+\\beta_3*Trend_1+"
-    # } else {
-    #   eq1 <- "\\beta_2*Intervention+\\beta_3*Trend+"
-    #   eq3 <- ""
-    # }
-    # if (input$control == "none"){
-    #   eq2 <- ""
-    # } else {
-    #   eq2 <- "*Group"
-    # }
-    # withMathJax(
-    #   paste0(
-    #     "Equation: $$Rate = \\beta_0+\\beta_1*Time+", eq1, "\\epsilon$$", ep = ""
-    #   )
-    # )
+
+    
   })
   
   # Output plot -----------------------------------------------------------------
@@ -1010,24 +961,7 @@ model$call[[2]] <- mod_formula()
   })
   
   
-  
-  # output$corrcompare <- renderUI({
-  #   pplus1 <- modelGls_null() %>% 
-  #     update(correlation = corARMA(p = input$p + 1, q = input$q,
-  #                                  form = ~ Time | England)) %>% 
-  #     anova(modelGls_null()) %>% .[2, 'p-value']
-  #   qplus1 <- modelGls_null() %>% 
-  #     update(correlation = corARMA(p = input$p, q = input$q + 1,
-  #                                  form = ~ Time | England)) %>% 
-  #     anova(modelGls_null()) %>% .[2, 'p-value']
-  #   HTML(paste(
-  #     corr(),
-  #     paste0("ANOVA comparison with model AR", input$p+1, ", MA", input$q, ": p = ", round(pplus1, 3)),
-  #     paste0("ANOVA comparison with model AR", input$p, ", MA", input$q+1, ": p = ", round(qplus1, 3)),
-  #     sep = "<br>"
-  #   ))
-  #   
-  # })
+
   
   
   # knit report ------------------------------------------------------------------------------------------------
