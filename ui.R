@@ -45,10 +45,14 @@ ui <- function(request){
                     label = "Phase-in",
                     value = FALSE),
       uiOutput("piyr1slider"),
+      h4("Corrections"),
       checkboxInput(inputId = "parallel",
                     label = "Parallel pre-intervention trends",
                     value = FALSE),
-      h4("Autoregression correction"),
+      checkboxInput("pillscare",
+                    "1996 'Pill scare' as outlier",
+                    value = FALSE),
+      h6("Autoregression correction"),
       column(6, numericInput("p", "AR: ", 0, min = 0)),
       column(6, numericInput("q", "MA: ", 0, min = 0)),
       h4("Download Graph"),
@@ -125,8 +129,8 @@ ui <- function(request){
                            dataTableOutput("qplus1")
                            ),
                   
-                  tabPanel("Dataframe for model", dataTableOutput(outputId = "dataframesumm"))
-                  # tabPanel("Dataframe for model", dataTableOutput(outputId = "fulldata"))
+                  # tabPanel("Dataframe for model", dataTableOutput(outputId = "dataframesumm"))
+                  tabPanel("Dataframe for model", dataTableOutput(outputId = "fulldata"))
       )
     )
   )
