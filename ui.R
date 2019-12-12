@@ -50,7 +50,7 @@ ui <- function(request){
                     label = "Parallel pre-intervention trends",
                     value = FALSE),
       checkboxInput("pillscare",
-                    "1996 'Pill scare' as outlier:",
+                    "1996 'Pill scare' as outlier",
                     value = FALSE),
       h6("Autoregression correction"),
       column(6, numericInput("p", "AR: ", 0, min = 0)),

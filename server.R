@@ -1,5 +1,3 @@
-# list.of.packages <- c("tidyverse", "broom", "nlme", "car", "svglite", "export", "XLConnect")
-
 require(tidyverse)
 require(broom)
 require(nlme)
@@ -38,12 +36,13 @@ constructCIRibbon <- function(newdata, model, formula) {
   
   df <- newdata %>%
     mutate(Predict = predict(model, newdata = .))
+  
   mm <- model.matrix(formula,
-  # mm <- model.matrix(as.formula(paste0("~ ", model$call$model[3])),
-  # mm <- model.matrix(formula(str_remove(model$call$model[[2]], "Value ")),
                      data = df)
+  
   vars <- mm %*% vcov(model) %*% t(mm)
   sds <- sqrt(diag(vars))
+  
   df <- df %>% mutate(se = sds,
                                 lowCI = Predict - 1.96 * sds,
                                 HiCI = Predict + 1.96 * sds)
