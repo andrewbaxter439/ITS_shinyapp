@@ -36,6 +36,7 @@ constructCIRibbon <- function(newdata, model) {
   newdata <- newdata %>%
     mutate(Predict = predict(model, newdata = newdata))
   mm <- model.matrix(as.formula(paste0("~ ", model$call$model[3])),
+  # mm <- model.matrix(formula(str_remove(model$call$model[[2]], "Value ")),
                      data = newdata)
   vars <- mm %*% vcov(model) %*% t(mm)
   sds <- sqrt(diag(vars))
@@ -235,11 +236,13 @@ server <- function(input, output, session) {
         ) %>%
         mutate_at(., colnames(.)[11:12], list(Eng = ~ .*England)) %>% 
         filter(Year >= input$obRange[1],
-               Year <= input$obRange[2])
+               Year <= input$obRange[2]) %>% 
+        mutate(PillScare = ifelse(Year>1995&Year<1999, 1, 0))
     } else {
       dfb() %>% filter(Year >= input$obRange[1],
                        Year <= input$obRange[2]) %>% 
-        mutate(Cat2 = 0)
+        mutate(Cat2 = 0)%>% 
+        mutate(PillScare = ifelse(Year>1995&Year<1999, 1, 0))
     }
   })
   
@@ -313,7 +316,8 @@ server <- function(input, output, session) {
             # model = model1,
             Value ~ Time +
               Cat1 +
-              Trend1,
+              Trend1 + 
+              PillScare,
             data = dfc(),
             correlation = NULL,
             method = "ML"
@@ -334,7 +338,8 @@ server <- function(input, output, session) {
             gls(
               Value ~ Time +
                 Cat1 +
-                Trend1,
+                Trend1 + 
+                PillScare,
               data = dfc(),
               correlation =  corARMA(p=input$p, q=input$q, form = ~ Time),
               method = "ML"
@@ -365,7 +370,8 @@ server <- function(input, output, session) {
                 Cat1 +
                 Trend1 +
                 Cat1_Eng +
-                Trend1_Eng,
+                Trend1_Eng + 
+                PillScare,
               data = dfc(),
               correlation =  NULL,
               method = "ML"
@@ -469,52 +475,72 @@ server <- function(input, output, session) {
   # Simple linear model ----------------------------------------------------------------------------------------
   
   modelGls <- reactive({  # model to check for autocorrelation
-    if (input$control == "none") {
-      if (input$int2) {
-        lm(
-          Value ~ Time +
-            Cat1 +
-            Trend1 +
-            Cat2 +
-            Trend2,
-          data = dfc()
+
+    lm(
+      formula(
+        paste0(
+          "Value ~ Time",
+          ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
+          " + Cat1 + Trend1",
+          ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
+          ifelse(input$int2,
+                 paste0(" + Cat2 + Trend2",
+                        ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
+                 ),
+                 ""
+          ),
+          ifelse(input$pillscare, " + PillScare", "")
         )
-      } else {
-        lm(
-          # model = mod_formula(),
-          Value ~ Time +
-            Cat1 +
-            Trend1,
-          data = dfc()
-        )
-      }
-    } else {
-      if (input$int2) {
-        lm(
-          Value ~ Time +
-            England +
-            Time_Eng +
-            Cat1 +
-            Trend1 +
-            Cat1_Eng +
-            Trend1_Eng +
-            Cat2 +
-            Trend2 +
-            Cat2_Eng +
-            Trend2_Eng,
-          data = dfc()
-        )} else {
-          lm(
-            Value ~ Time +
-              England +
-              Time_Eng +
-              Cat1 +
-              Trend1 +
-              Cat1_Eng +
-              Trend1_Eng,
-            data = dfc()
-          )}
-    }
+      ),
+      data = dfc()
+    )
+    
+        # if (input$control == "none") {
+    #   if (input$int2) {
+    #     lm(
+    #       Value ~ Time +
+    #         Cat1 +
+    #         Trend1 +
+    #         Cat2 +
+    #         Trend2,
+    #       data = dfc()
+    #     )
+    #   } else {
+    #     lm(
+    #       # model = mod_formula(),
+    #       Value ~ Time +
+    #         Cat1 +
+    #         Trend1,
+    #       data = dfc()
+    #     )
+    #   }
+    # } else {
+    #   if (input$int2) {
+    #     lm(
+    #       Value ~ Time +
+    #         England +
+    #         Time_Eng +
+    #         Cat1 +
+    #         Trend1 +
+    #         Cat1_Eng +
+    #         Trend1_Eng +
+    #         Cat2 +
+    #         Trend2 +
+    #         Cat2_Eng +
+    #         Trend2_Eng,
+    #       data = dfc()
+    #     )} else {
+    #       lm(
+    #         Value ~ Time +
+    #           England +
+    #           Time_Eng +
+    #           Cat1 +
+    #           Trend1 +
+    #           Cat1_Eng +
+    #           Trend1_Eng,
+    #         data = dfc()
+    #       )}
+    # }
   })
   
   
@@ -557,7 +583,8 @@ server <- function(input, output, session) {
                               "Cat2",
                               "Trend2",
                               "Cat2_Eng",
-                              "Trend2_Eng"),
+                              "Trend2_Eng",
+                              "PillScare"),
                      lab2 = c(paste0(interceptName(), " (est) rate at ", input$obRange[1]-1),
                               paste0(interceptName(), " base trend"),
                               paste0(input$main, " difference in rate at ", input$obRange[1]-1),
@@ -569,7 +596,8 @@ server <- function(input, output, session) {
                               paste0(interceptName(), " change in level at intervention 2"),
                               paste0(interceptName(), " change in trend at intervention 2"),
                               paste0(input$main, " difference in level from control at intervention 2"),
-                              paste0(input$main, " difference in trend from control at intervention 2")
+                              paste0(input$main, " difference in trend from control at intervention 2"),
+                              "'Pill Scare' corrector"
                      )
     )
     tb <- printCoefficients(modelGls_null())
@@ -586,7 +614,8 @@ server <- function(input, output, session) {
       paste0("\U03B2", "8"),
       paste0("\U03B2", "9"),
       paste0("\U03B2", "10"),
-      paste0("\U03B2", "11")
+      paste0("\U03B2", "11"),
+      paste0("\U03B2", "12")
       # withMathJax("\\(\\beta_0\\)"),
       # withMathJax("\\(\\beta_1\\)"),
       # withMathJax("\\(\\beta_2\\)"),
@@ -640,7 +669,8 @@ server <- function(input, output, session) {
           Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
           Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2       = 0,
-          Trend2     = 0
+          Trend2     = 0,
+          PillScare  = 0
         ) 
       } else {
         tibble(
@@ -648,7 +678,8 @@ server <- function(input, output, session) {
           Cat1       = 0,
           Trend1     = 0,
           Cat2       = 0,
-          Trend2     = 0
+          Trend2     = 0,
+          PillScare  = 0
         )
       }
     } else {
@@ -664,7 +695,8 @@ server <- function(input, output, session) {
           Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
           Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2_Eng   = 0,
-          Trend2_Eng = 0
+          Trend2_Eng = 0,
+          PillScare  = 0
           # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
         ) 
       } else {
@@ -679,7 +711,8 @@ server <- function(input, output, session) {
           Cat1_Eng   = 0,
           Trend1_Eng = 0,
           Cat2_Eng   = 0,
-          Trend2_Eng = 0
+          Trend2_Eng = 0,
+          PillScare  = 0
           # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
         )
       }
