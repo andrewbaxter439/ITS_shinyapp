@@ -32,18 +32,23 @@ testAutocorr <- function(model, data=NULL, max.lag = 10, time.points = 25) {
   acf(residuals(model), type = 'partial')
 }
 
-constructCIRibbon <- function(newdata, model) {
-  newdata <- newdata %>%
-    mutate(Predict = predict(model, newdata = newdata))
-  mm <- model.matrix(as.formula(paste0("~ ", model$call$model[3])),
+constructCIRibbon <- function(newdata, model, formula) {
+  
+  model$call[[2]] <- formula
+  
+  df <- newdata %>%
+    mutate(Predict = predict(model, newdata = .))
+  mm <- model.matrix(formula,
+  # mm <- model.matrix(as.formula(paste0("~ ", model$call$model[3])),
   # mm <- model.matrix(formula(str_remove(model$call$model[[2]], "Value ")),
-                     data = newdata)
+                     data = df)
   vars <- mm %*% vcov(model) %*% t(mm)
   sds <- sqrt(diag(vars))
-  newdata <- newdata %>% mutate(se = sds,
+  df <- df %>% mutate(se = sds,
                                 lowCI = Predict - 1.96 * sds,
                                 HiCI = Predict + 1.96 * sds)
 }
+  
 
 printCoefficients <- function(model){
   as_tibble(trimws(format(round(summary(model)$tTable, 3), nsmall=3))) %>%
@@ -54,7 +59,6 @@ printCoefficients <- function(model){
 # app server ---------------------------------------
 
 server <- function(input, output, session) {
-  
   
   # Reactive inputs -------------------------------------------------------------------------------------------
   
@@ -188,6 +192,7 @@ server <- function(input, output, session) {
   # Dataframe setup --------------------------------------------------------------------------------------------
   
   load("data/all_uk_rates.rdata")
+  # output$fulldata <- renderDataTable(modcfac())
   output$fulldata <- renderDataTable(all_UK_rates[[input$ages]])
   
   dfa <- reactive({
@@ -237,7 +242,7 @@ server <- function(input, output, session) {
         mutate_at(., colnames(.)[11:12], list(Eng = ~ .*England)) %>% 
         filter(Year >= input$obRange[1],
                Year <= input$obRange[2]) %>% 
-        mutate(PillScare = ifelse(Year>1995&Year<1999, 1, 0))
+        mutate(PillScare = ifelse(Year>1995, 1, 0))
     } else {
       dfb() %>% filter(Year >= input$obRange[1],
                        Year <= input$obRange[2]) %>% 
@@ -261,42 +266,63 @@ server <- function(input, output, session) {
     options = list(searching = FALSE)
   )
   
-  # formula # NOT WORKING ----------------------------------------------------------------------------------------------
+  # formula  ----------------------------------------------------------------------------------------------
   # 
-  # mod_formula <- reactive({
-  #   formula(
-  #     paste0(
-  #       "Value ~ Time",
-  #       ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
-  #       " + Cat1 + Trend1",
-  #       ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
-  #       ifelse(input$int2,
-  #              paste0(" + Cat2 + Trend2",
-  #                     ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
-  #              ),
-  #              ""
-  #       )
-  #     )
-  #   )
-  # })
+  mod_formula <- reactive({
+    formula(
+      paste0(
+        "Value ~ Time",
+        ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
+        " + Cat1 + Trend1",
+        ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
+        ifelse(input$int2,
+               paste0(" + Cat2 + Trend2",
+                      ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
+               ),
+               ""
+        ),
+        ifelse(input$pillscare, " + PillScare", "")
+      )
+    )
+  })
   # 
-  # output$form1 <- renderText({as.character(mod_formula())})
+  output$form1 <- renderText({as.character(predict(modelGls_null()))})
   # output$form2 <- renderText({as.character(modelGls_null()$call$model[3])})
   
   # Construct model --------------------------------------------------------------------------------------------
   
   modelGls_null <- reactive({  # add if statements for each model
     
-  ### Not working - call to external formula
-  #   req(mod_formula())
-  #   gls(mod_formula(),
-  #       data = dfc(),
-  #       correlation = NULL,
-  #       method = "ML"
-  #       )
-  # })
-  # 
-  #   nullfunct <- reactive({
+    if (input$p == 0 & input$q == 0){
+    model <- gls(
+      model = mod_formula(),
+      correlation = NULL,
+      data = dfc(),
+      method = "ML"
+    )
+    } else {
+      if (input$control == "none") {
+    model <- gls(
+      model = mod_formula(),
+      correlation = corARMA(p=input$p, q=input$q, form = ~ Time),
+      data = dfc(),
+      method = "ML"
+    )
+        
+      }
+    model <- gls(
+      model = mod_formula(),
+      correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
+      data = dfc(),
+      method = "ML"
+    )
+    }
+    
+    
+    
+  })
+  modelGls_null_unused <- reactive({  # add if statements for each model
+    
     
     if (input$control == "none") {       # outer if - with/without control (x1)
       if (input$p == 0 & input$q == 0){  # second if - with or without ARMA correction (x2)
@@ -477,70 +503,9 @@ server <- function(input, output, session) {
   modelGls <- reactive({  # model to check for autocorrelation
 
     lm(
-      formula(
-        paste0(
-          "Value ~ Time",
-          ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
-          " + Cat1 + Trend1",
-          ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
-          ifelse(input$int2,
-                 paste0(" + Cat2 + Trend2",
-                        ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
-                 ),
-                 ""
-          ),
-          ifelse(input$pillscare, " + PillScare", "")
-        )
-      ),
+      mod_formula(),
       data = dfc()
     )
-    
-        # if (input$control == "none") {
-    #   if (input$int2) {
-    #     lm(
-    #       Value ~ Time +
-    #         Cat1 +
-    #         Trend1 +
-    #         Cat2 +
-    #         Trend2,
-    #       data = dfc()
-    #     )
-    #   } else {
-    #     lm(
-    #       # model = mod_formula(),
-    #       Value ~ Time +
-    #         Cat1 +
-    #         Trend1,
-    #       data = dfc()
-    #     )
-    #   }
-    # } else {
-    #   if (input$int2) {
-    #     lm(
-    #       Value ~ Time +
-    #         England +
-    #         Time_Eng +
-    #         Cat1 +
-    #         Trend1 +
-    #         Cat1_Eng +
-    #         Trend1_Eng +
-    #         Cat2 +
-    #         Trend2 +
-    #         Cat2_Eng +
-    #         Trend2_Eng,
-    #       data = dfc()
-    #     )} else {
-    #       lm(
-    #         Value ~ Time +
-    #           England +
-    #           Time_Eng +
-    #           Cat1 +
-    #           Trend1 +
-    #           Cat1_Eng +
-    #           Trend1_Eng,
-    #         data = dfc()
-    #       )}
-    # }
   })
   
   
@@ -670,7 +635,8 @@ server <- function(input, output, session) {
           Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2       = 0,
           Trend2     = 0,
-          PillScare  = 0
+          PillScare  = 1,
+          Value = 1
         ) 
       } else {
         tibble(
@@ -679,7 +645,8 @@ server <- function(input, output, session) {
           Trend1     = 0,
           Cat2       = 0,
           Trend2     = 0,
-          PillScare  = 0
+          PillScare  = 1,
+          Value = 1
         )
       }
     } else {
@@ -696,7 +663,8 @@ server <- function(input, output, session) {
           Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2_Eng   = 0,
           Trend2_Eng = 0,
-          PillScare  = 0
+          PillScare  = 1,
+          Value = 1
           # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
         ) 
       } else {
@@ -712,7 +680,8 @@ server <- function(input, output, session) {
           Trend1_Eng = 0,
           Cat2_Eng   = 0,
           Trend2_Eng = 0,
-          PillScare  = 0
+          PillScare  = 1,
+          Value = 1
           # Remove _Eng interactions (retaining 1st intervention interactions for 2nd int)
         )
       }
@@ -721,7 +690,9 @@ server <- function(input, output, session) {
   
   
   modcfac <- reactive({
-    left_join(modcfac_base(), constructCIRibbon(modcfac_base(), modelGls_null()))
+    left_join(modcfac_base(), constructCIRibbon(modcfac_base(), 
+                                                modelGls_null(),
+                                                mod_formula()))
   })
   
   
@@ -731,10 +702,42 @@ server <- function(input, output, session) {
     c(0, 1.1*max(modcfac()$HiCI, dfd()$Value))
   })
   
+  
+
+# Final dataframe ---------------------------------------------------------
+
+
   dfd <- reactive({
-    left_join(dfc(), constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null())) %>% 
-      arrange(by = Country) %>%
-      mutate(Predict = predict(modelGls_null(), .))# Add Predicts for non-England
+model <- modelGls_null()
+model$call[[2]] <- mod_formula()
+  #   newdata <- dfc() %>%
+  #     mutate(Predict = predict(modelGls_null()
+  #                              )
+  #            )
+  # 
+  #   mm <- model.matrix(form,
+  #                      # mm <- model.matrix(as.formula(paste0("~ ", model$call$model[3])),
+  #                      # mm <- model.matrix(formula(str_remove(model$call$model[[2]], "Value ")),
+  #                      data = newdata)
+  # 
+  #   vars <- mm %*% vcov(modelGls()) %*% t(mm)
+  #   sds <- sqrt(diag(vars))
+  #   newdata <- newdata %>% mutate(se = sds,
+  #                                 lowCI = Predict - 1.96 * sds,
+  #                                 HiCI = Predict + 1.96 * sds)
+  #   
+  #   left_join(dfc(), newdata) %>% 
+  #     arrange(by = Country) %>% 
+  #     mutate(Predict = predict(modelGls_null())) %>% 
+  #     filter(England == 1, Year >= startYr())
+  #   
+  # })
+  # 
+  # 
+  # dfdUFF <- reactive({
+  left_join(dfc(), constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null(), mod_formula())) %>%
+    arrange(by = Country) %>%
+    mutate(Predict = predict(model, newdata = .))# Add Predicts for non-England
   })
   
   output$dfd <- renderDataTable(dfd())
@@ -828,16 +831,11 @@ server <- function(input, output, session) {
     mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
     
     if (input$grey){
-      # dfd() <- dfd() %>% 
-      # filter(Year >= input$obRange[1])
-      
       ScoCol <- "grey"
       WalCol <- "grey"
     }
     
     dfd()  %>%
-      # arrange(by = Country) %>%
-      # mutate(Predict = predict(modelGls_null(), .)) %>%  # Add Predicts for non-England
       ggplot(aes(
         Time,
         Value,
@@ -873,17 +871,17 @@ server <- function(input, output, session) {
         size = 1,
         show.legend = FALSE) +
       # control data points and trend line
-      geom_point(data=dfa2()%>% 
-                   filter(Country == input$control,
-                          Year >= ifelse(input$grey, input$obRange[1], min(dfa2()$Year))),
-                 aes(Time, Value, col = Country), 
-                 show.legend = FALSE,
-                 inherit.aes = FALSE) +
+        geom_point(data=dfa2()%>%
+                     filter(Country == input$control,
+                            Year >= ifelse(input$grey, input$obRange[1], min(dfa2()$Year))),
+                   aes(Time, Value, col = Country),
+                   show.legend = FALSE,
+                   inherit.aes = FALSE) +
       geom_line(data = . %>% filter(Country == input$control), aes(y=Predict), size = 1.5, alpha = alpha) +
       # England data points and trend line
-      geom_point(data=dfa2()%>% 
+      geom_point(data=dfa2()%>%
                    filter(Country != input$control),
-                 aes(Time, Value, col = Country), 
+                 aes(Time, Value, col = Country),
                  show.legend = FALSE,
                  inherit.aes = FALSE) +
       geom_line(data = . %>% filter(Country != input$control), aes(y=Predict), size = 1.5, alpha = alpha) +
@@ -952,6 +950,10 @@ server <- function(input, output, session) {
   )
   
   output$autocorr <- renderPlot({
+    
+    model <- modelGls_null()
+    model$call[[2]] <- mod_formula()
+    
     rows <- input$obRange[2]-input$obRange[1]+1
     par(cex = 0.7, mai = c(0.1, 0.1, 0.2, 0.1))
     par(fig = c(0.03, 1, 0.8, 1))
@@ -964,10 +966,10 @@ server <- function(input, output, session) {
     )
     
     par(fig = c(0.03, 0.5, 0.05, 0.75), new = TRUE)
-    acf(residuals(modelGls_null(), type = "normalized"))
+    acf(residuals(model, type = "normalized"))
     
     par(fig = c(0.55, 1, 0.05, 0.75), new = TRUE)
-    acf(residuals(modelGls_null(), type = "normalized"), type = 'partial')
+    acf(residuals(model, type = "normalized"), type = 'partial')
   })
   
   modelText <- reactive({paste0("AR", input$p, ", MA", input$q)})
@@ -982,20 +984,29 @@ server <- function(input, output, session) {
   
   output$pplus1_title <- renderText({paste0("ANOVA comparison with model ", pplus1_text(), ":")})
   
-  output$pplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {modelGls_null() %>% 
+  output$pplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
+    
+    model <- modelGls_null()
+    model$call[[2]] <- mod_formula()
+    
+    model %>% 
       update(correlation = corARMA(p = input$p + 1, q = input$q,
                                    form = ~ Time | England)) %>% 
-      anova(modelGls_null(),.)%>% 
+      anova(model, .)%>% 
       mutate(call = c(modelText(), pplus1_text())) })
   
   qplus1_text <- renderText({paste0("AR", input$p, ", MA", input$q+1)})
   
   output$qplus1_title <- renderText({paste0("ANOVA comparison with model ", qplus1_text(), ":")})
   
-  output$qplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {modelGls_null() %>% 
+  output$qplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
+    model <- modelGls_null()
+    model$call[[2]] <- mod_formula()
+    
+    model %>% 
       update(correlation = corARMA(p = input$p, q = input$q + 1,
                                    form = ~ Time | England)) %>% 
-      anova(modelGls_null(),.)%>% 
+      anova(model,.)%>% 
       mutate(call = c(modelText(), qplus1_text()))
   })
   

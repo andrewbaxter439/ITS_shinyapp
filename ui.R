@@ -129,8 +129,8 @@ ui <- function(request){
                            dataTableOutput("qplus1")
                            ),
                   
-                  tabPanel("Dataframe for model", dataTableOutput(outputId = "dataframesumm"))
-                  # tabPanel("Dataframe for model", dataTableOutput(outputId = "fulldata"))
+                  # tabPanel("Dataframe for model", dataTableOutput(outputId = "dataframesumm"))
+                  tabPanel("Dataframe for model", dataTableOutput(outputId = "fulldata"))
       )
     )
   )
