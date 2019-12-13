@@ -246,7 +246,7 @@ server <- function(input, output, session) {
       dfb() %>% filter(Year >= input$obRange[1],
                        Year <= input$obRange[2]) %>% 
         mutate(Cat2 = 0)%>% 
-        mutate(PillScare = ifelse(Year>1995&Year<1999, 1, 0))
+        mutate(PillScare = ifelse(Year>1995, 1, 0))
     }
   })
   
