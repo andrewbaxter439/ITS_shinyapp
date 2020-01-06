@@ -308,13 +308,14 @@ server <- function(input, output, session) {
       method = "ML"
     )
         
-      }
+      } else {
     model <- gls(
       model = mod_formula(),
       correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
       data = dfc(),
       method = "ML"
     )
+      }
     }
     
     
