@@ -874,7 +874,8 @@ server <- function(input, output, session) {
       ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
       # coord_cartesian(ylim = c(0, maxy)) +
-      coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
+      # coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
+      coord_cartesian(ylim = c(0, 56)) +
       # coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
       # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
