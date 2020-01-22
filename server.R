@@ -77,6 +77,13 @@ server <- function(input, output, session) {
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".pptx")},
     content = function(file){graph2ppt(PlotInput() + theme(text = element_text(size = 16), line = element_blank()), file = file, height = input$height/25.4, width = input$width/25.4)}
   )
+
+    output$ggplot <- downloadHandler(
+    filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".rdata")},
+    content = function(file){
+      graph <- PlotInput()
+      save(graph, file = file)}
+  )
   
   
   
@@ -274,19 +281,20 @@ server <- function(input, output, session) {
         ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
         " + Cat1 + Trend1",
         ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
-        ifelse(input$int2,
-               paste0(" + Cat2 + Trend2",
-                      ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
-               ),
-               ""
-        ),
+        ifelse(input$int2, " + Trend2", ""),
+        # ifelse(input$int2,
+        #        paste0(" + Trend2",
+        #               ifelse(input$control == "none", "", " + Trend2_Eng")
+        #        ),
+        #        ""
+        # ),
         ifelse(input$pillscare, " + PillScare", "")
       )
     )
   })
   # 
-  output$form1 <- renderText({as.character(predict(modelGls_null()))})
-  # output$form2 <- renderText({as.character(modelGls_null()$call$model[3])})
+  # output$form1 <- renderText({as.character(predict(modelGls_null()))})
+  output$form2 <- renderText({deparse(mod_formula())})
   
   # Construct model --------------------------------------------------------------------------------------------
   
@@ -619,10 +627,12 @@ server <- function(input, output, session) {
       if(input$int2) {
         tibble(
           Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
-          Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
-          Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
+          Cat1       = 0,
+          Trend1     = 0,
+          # Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
+          # Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2       = 0,
-          Trend2     = 0,
+          Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr() - input$int2yr + 1)),
           PillScare  = 1,
           Value = 1
         ) 
@@ -647,8 +657,10 @@ server <- function(input, output, session) {
           Trend1     = c(1:(maxYr()-startYr()+1)),
           Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
           Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr()-input$int2yr+1)), 
-          Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
-          Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
+          Cat1_Eng   = 1,
+          Trend1_Eng = 1,
+          # Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
+          # Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2_Eng   = 0,
           Trend2_Eng = 0,
           PillScare  = 1,
@@ -792,7 +804,8 @@ server <- function(input, output, session) {
         Value,
         col = Country,
         fill = Country,
-        group = interaction(Country, Cat1, Cat2)
+          group = Cat1,
+        # group = interaction(Country, Cat1, Cat2)
       )) +
       # Counterfactual confidence intervals (not shown in legend)
       geom_ribbon(
@@ -842,7 +855,7 @@ server <- function(input, output, session) {
         aes(
           x = Time,
           y = Predict,
-          group = interaction(Cat1, Cat2),
+          # group = interaction(Cat1, Cat2),
           col = "Prediction",
           fill = NULL
         ),
@@ -855,9 +868,9 @@ server <- function(input, output, session) {
       geom_vline(xintercept = input$int1yr-input$obRange[1]+0.5,
                  linetype = "dotted",
                  col = "#000000CC") +
-      geom_vline(xintercept = input$int2yr-input$obRange[1]+0.5,
-                 linetype = "dotted",
-                 col = ifelse(input$int2, "#000000CC", NA)) +
+      # geom_vline(xintercept = input$int2yr-input$obRange[1]+0.5,
+      #            linetype = "dotted",
+      #            col = ifelse(input$int2, "#000000CC", NA)) +
       geom_rect(
         xmin = input$int1yr-input$obRange[1]+0.5,
         xmax = input$pi1yr-input$obRange[1]+1.5,

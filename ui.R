@@ -61,7 +61,8 @@ ui <- function(request){
       column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
       fluidRow(
       column(6, 
-      downloadButton("dlppt", label = "Download .pptx")
+      downloadButton("ggplot", label = "Download ggplot")
+      # downloadButton("dlppt", label = "Download .pptx")
              ),
       column(6,
       downloadButton("dlgraph", label = "Download image")
@@ -112,7 +113,7 @@ ui <- function(request){
                   
                   tabPanel("Confidence Intervals",
                                       dataTableOutput((outputId = "confint")),
-                           # textOutput("form2"),
+                           textOutput("form2"),
                            downloadButton("dlconfints")
                   ),
                   
