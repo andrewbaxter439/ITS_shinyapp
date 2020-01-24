@@ -1,15 +1,16 @@
 ui <- function(request){
    fluidPage(
   # tags$head(
-  #   tags$style(
-  #     HTML(
-  #       "
-  #       #DataTables_Table_0 tr:hover{
-  #         background-color: #dddddd;
-  #       }
-  #       "
-  #     )
-  #   )
+    # tags$link(type = "text/css", rel = "stylesheet", href = "projstyle.css")
+    # tags$style(
+    #   HTML(
+    #     "
+    #     #DataTables_Table_0 tr:hover{
+    #       background-color: #dddddd;
+    #     }
+    #     "
+    #   )
+    # )
   # ),
   theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
   titlePanel("ITS analyses of England's Teenage Pregnancy Strategy"),
@@ -61,8 +62,8 @@ ui <- function(request){
       column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
       fluidRow(
       column(6, 
-      downloadButton("ggplot", label = "Download ggplot")
-      # downloadButton("dlppt", label = "Download .pptx")
+      # downloadButton("ggplot", label = "Download ggplot")
+      downloadButton("dlppt", label = "Download .pptx")
              ),
       column(6,
       downloadButton("dlgraph", label = "Download image")

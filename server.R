@@ -68,7 +68,17 @@ server <- function(input, output, session) {
   output$dlgraph <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".", input$format)},
     content = function(file) {
-      ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)
+      graph <- PlotInput() +
+               # ggtitle(paste(input$main,
+               #               ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
+               #               input$obRange[1], "-",
+               #               input$obRange[2],
+               #               sep=" ")) +
+               theme(title = element_text(size = 14), 
+                     axis.title = element_text(size = 12),
+                     legend.text = element_text(size = 12))
+      ggsave(file, graph,
+             dpi = 400, units = "mm", width = input$width, height = input$height)
     },
     contentType = paste0("image/", input$format)
   )
@@ -78,12 +88,12 @@ server <- function(input, output, session) {
     content = function(file){graph2ppt(PlotInput() + theme(text = element_text(size = 16), line = element_blank()), file = file, height = input$height/25.4, width = input$width/25.4)}
   )
 
-    output$ggplot <- downloadHandler(
-    filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".rdata")},
-    content = function(file){
-      graph <- PlotInput()
-      save(graph, file = file)}
-  )
+  #   output$ggplot <- downloadHandler(
+  #   filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".rdata")},
+  #   content = function(file){
+  #     graph <- renderPlot(PlotInput())
+  #     save(graph, file = file)}
+  # )
   
   
   
@@ -816,7 +826,7 @@ server <- function(input, output, session) {
           ymax=HiCI,
           group = interaction(Cat1, Cat2),
           col=NULL,
-          fill= ifelse(input$ribbons,"Prediction","#00000000")
+          fill= ifelse(input$ribbons,"No Strategy","#00000000")
         ),
         alpha=0.5,
         size = 1,
@@ -856,7 +866,7 @@ server <- function(input, output, session) {
           x = Time,
           y = Predict,
           # group = interaction(Cat1, Cat2),
-          col = "Prediction",
+          col = "No Strategy",
           fill = NULL
         ),
         linetype = "longdash",
@@ -883,6 +893,7 @@ server <- function(input, output, session) {
       # Display parameters
       theme(panel.background = element_blank(),
             legend.key  = element_blank(),
+            legend.position = "none",
             panel.grid = element_blank()) +
       ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
@@ -894,12 +905,14 @@ server <- function(input, output, session) {
       # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_x_continuous(limits = c(mnlbTm, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
-        breaks = c("England", "Wales", "Scotland", "England and Wales", "Prediction"),
+        name = "",
+        breaks = c("England", "Wales", "Scotland", "England and Wales", "No Strategy"),
         values = c("England" = "#CF142B",
                    "Wales" = WalCol,
                    "Scotland" = ScoCol,
                    "England and Wales" = "#A50115",
-                   "Prediction" = "#FFC000"),
+                   "No Strategy" = "#FFC000"),
+        labels = c("Strategy - Observed", "Wales", "Scotland", "England and Wales", "No Strategy"),
         aesthetics = c("colour", "fill"))
   })
   

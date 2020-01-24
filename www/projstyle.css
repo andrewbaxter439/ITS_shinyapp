@@ -1,0 +1,11 @@
+.well {
+	background-color: #6b8b9a;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+.irs-min, .irs-max {
+	color: #DDDDDD;
+}
+.container-fluid {
+	background-color: #b7bed6;
+}
