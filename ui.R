@@ -1,7 +1,9 @@
 ui <- function(request){
    fluidPage(
-  # tags$head(
-    # tags$link(type = "text/css", rel = "stylesheet", href = "projstyle.css")
+  tags$head(
+    # tags$link(rel="icon", href="favicon.ico", type = "image/x-icon"),
+    tags$link(type = "text/css", rel = "stylesheet", href = "projstyle.css"),
+    tags$link(rel="shortcut icon", href="favicon.ico", type = "image/x-icon"),
     # tags$style(
     #   HTML(
     #     "
@@ -11,9 +13,10 @@ ui <- function(request){
     #     "
     #   )
     # )
-  # ),
+  ),
   theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
-  titlePanel("ITS analyses of England's Teenage Pregnancy Strategy"),
+  titlePanel(h2(style = "font-weight: 900;", "ITS analyses of England's Teenage Pregnancy Strategy"), 
+             windowTitle = "ITS analyses of England's Teenage Pregnancy Strategy"),
   withMathJax(),
   sidebarLayout(
     
@@ -24,6 +27,7 @@ ui <- function(request){
         tags$style(type="text/css", "#inline label{ display: table-cell; text-align: center; vertical-align: middle; } 
                    #inline .form-group { display: table-row;}")
         ),
+      fluidRow(style = "margin: 0px;",
       selectInput(inputId = "ages",
                   label = "Age group:",
                   choices = c("Under 16", "Under 18", "Under 20"),
@@ -56,11 +60,14 @@ ui <- function(request){
       h6("Autoregression correction"),
       column(6, numericInput("p", "AR: ", 0, min = 0)),
       column(6, numericInput("q", "MA: ", 0, min = 0)),
+      ),
+      fluidRow(style = "margin: 0px;",
       h4("Download Graph"),
       column(4, numericInput("width", "Width (mm)", 200)),
       column(4, numericInput("height", "Height (mm)", 150)),
       column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
-      fluidRow(
+      ),
+      fluidRow(style = "margin: 0px;",
       column(6, 
       # downloadButton("ggplot", label = "Download ggplot")
       downloadButton("dlppt", label = "Download .pptx")
@@ -70,7 +77,7 @@ ui <- function(request){
       )
       ),
       br(),
-      fluidRow(
+      fluidRow(style = "margin: 0px;",
         h4("Download analysis report (.docx)"),
         column(6, 
                downloadButton("downloadReport", label = "Download report")
@@ -114,7 +121,7 @@ ui <- function(request){
                   
                   tabPanel("Confidence Intervals",
                                       dataTableOutput((outputId = "confint")),
-                           textOutput("form2"),
+                           # textOutput("form2"),
                            downloadButton("dlconfints")
                   ),
                   

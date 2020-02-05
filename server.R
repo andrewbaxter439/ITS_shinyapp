@@ -744,8 +744,8 @@ server <- function(input, output, session) {
       }
     } else {
       if (input$control == "none") {
-        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention_1+\\beta_3*Trend_1+$$
-        $$\\beta_4*Intervention_2+\\beta_5*Trend_2+\\epsilon$$"
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention_1+$$
+        $$\\beta_3*Trend_1+\\beta_4*Trend_2+\\epsilon$$"
       } else if (!input$parallel) {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+
         \\beta_2*Group+
@@ -753,11 +753,8 @@ server <- function(input, output, session) {
         \\beta_4*Intervention_1+$$
         $$\\beta_5*Trend_1+
         \\beta_6*Group*Intervention_1+
-        \\beta_7*Group*Trend_1+
-        \\beta_8*Intervention_2+$$
-        $$\\beta_9*Trend_2+
-        \\beta_{10}*Group*Intervention_2+
-        \\beta_{11}*Group*Trend_2+
+        \\beta_7*Group*Trend_1+$$
+        $$\\beta_8*Trend_2+
         \\epsilon$$" 
       } else {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+
@@ -765,11 +762,8 @@ server <- function(input, output, session) {
         \\beta_3*Intervention_1+
         \\beta_4*Trend_1+$$
         $$\\beta_5*Group*Intervention_1+
-        \\beta_6*Group*Trend_1+
-        \\beta_7*Intervention_2+$$
-        $$\\beta_8*Trend_2+
-        \\beta_9*Group*Intervention_2+
-        \\beta_{10}*Group*Trend_2+
+        \\beta_6*Group*Trend_1+$$
+        $$\\beta_7*Trend_2+
         \\epsilon$$" 
       }
     }
