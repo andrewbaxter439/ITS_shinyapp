@@ -152,7 +152,7 @@ server <- function(input, output, session) {
   
   output$intyr2slider <- renderUI ({
     sliderInput(inputId = "int2yr",
-                label = "Beginning of intervention 2:",
+                label = "Post-intervention common shock:",
                 min = startYr()+2,
                 max = maxYr()-2,
                 step = 1,
@@ -615,7 +615,7 @@ server <- function(input, output, session) {
   # Outputting tables ------------------------------------------------------------------------------------------
   
   output$confint<- renderDataTable(confintervals() %>% select(-Std.Error), 
-                                   options = list(searching = FALSE, paging = FALSE, info = FALSE))
+                                   options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
   confintervals <- reactive({
     modelTable() %>%
@@ -627,7 +627,7 @@ server <- function(input, output, session) {
   
   
   output$modelsummary <- renderDataTable(
-    modelTable(), options = list(searching = FALSE, paging = FALSE, info = FALSE)
+    modelTable(), options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
   )
   
   # Create cfac --------------------------------------------------------
@@ -727,7 +727,7 @@ server <- function(input, output, session) {
       mutate(Predict = predict(model, newdata = .))# Add Predicts for non-England
   })
   
-  output$dfd <- renderDataTable(dfd())
+  output$dfd <- renderDataTable(dfd(), options = list(ordering = FALSE))
   
   
   # Output equation --------------------------------------------------------------------------------------------
@@ -918,7 +918,7 @@ server <- function(input, output, session) {
     (
       data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
     ),
-    options = list(searching = FALSE, paging = FALSE, info = FALSE)
+    options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
   )
   
   output$autocorr <- renderPlot({

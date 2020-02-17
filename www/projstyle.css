@@ -9,6 +9,9 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 .irs-min, .irs-max {
 	color: #DDDDDD;
 }
+.table-hover>tbody>tr:hover{
+	background-color: #e6e6ff;
+}
 /*
 .container-fluid {
 	background-color: #b7bed6;

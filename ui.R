@@ -1,20 +1,20 @@
 ui <- function(request){
    fluidPage(
+  theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
   tags$head(
     # tags$link(rel="icon", href="favicon.ico", type = "image/x-icon"),
     tags$link(type = "text/css", rel = "stylesheet", href = "projstyle.css"),
     tags$link(rel="shortcut icon", href="favicon.ico", type = "image/x-icon"),
-    # tags$style(
-    #   HTML(
-    #     "
-    #     #DataTables_Table_0 tr:hover{
-    #       background-color: #dddddd;
-    #     }
-    #     "
-    #   )
-    # )
+    tags$style(
+      HTML(
+        "
+        .dataTable tbody tr:hover{
+          background-color: #e6e6ff;
+        }
+        "
+      )
+    )
   ),
-  theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
   titlePanel(h2(style = "font-weight: 900;", "ITS analyses of England's Teenage Pregnancy Strategy"), 
              windowTitle = "ITS analyses of England's Teenage Pregnancy Strategy"),
   withMathJax(),
@@ -43,7 +43,7 @@ ui <- function(request){
       uiOutput("dateslider"),
       uiOutput("intyr1slider"),
       checkboxInput(inputId = "int2",
-                    label = "Intervention 2",
+                    label = "Common shock",
                     value = FALSE),
       uiOutput("intyr2slider"),
       checkboxInput(inputId = "pi1",
@@ -70,20 +70,24 @@ ui <- function(request){
       fluidRow(style = "margin: 0px;",
       column(6, 
       # downloadButton("ggplot", label = "Download ggplot")
-      downloadButton("dlppt", label = "Download .pptx")
+      downloadButton("dlppt", label = "Download .pptx",
+                     style = "background-color: #c6c6e3; border-color: #9a9ab9;")
              ),
       column(6,
-      downloadButton("dlgraph", label = "Download image")
+      downloadButton("dlgraph", label = "Download image",
+                     style = "background-color: #c6c6e3; border-color: #9a9ab9;")
       )
       ),
       br(),
       fluidRow(style = "margin: 0px;",
         h4("Download analysis report (.docx)"),
         column(6, 
-               downloadButton("downloadReport", label = "Download report")
+               downloadButton("downloadReport", label = "Download report", 
+                              style = "background-color: #c6c6e3; border-color: #9a9ab9;")
         ),
         column(6,
-               bookmarkButton("Save analysis", title = "Copy url with current values")
+               bookmarkButton("Save analysis", title = "Copy url with current values", 
+                              style = "background-color: #c6c6e3; border-color: #9a9ab9;")
         ),
       )
     ),
