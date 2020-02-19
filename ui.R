@@ -126,6 +126,7 @@ ui <- function(request){
                   tabPanel("Confidence Intervals",
                                       DT::dataTableOutput((outputId = "confint")),
                            # textOutput("form2"),
+                           br(),
                            downloadButton("dlconfints")
                   ),
                   

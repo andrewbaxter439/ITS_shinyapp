@@ -209,7 +209,7 @@ server <- function(input, output, session) {
   
   load("data/all_uk_rates.rdata")
   # output$fulldata <- DT::renderDataTable(modcfac())
-  output$fulldata <- DT::renderDataTable(all_UK_rates[[input$ages]])
+  output$fulldata <- DT::renderDataTable(all_UK_rates[[input$ages]], options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
   dfa <- reactive({
     all_UK_rates[[input$ages]] %>% 
@@ -279,7 +279,7 @@ server <- function(input, output, session) {
   
   output$dataframesumm <- DT::renderDataTable(
     (arrange(dfc(), by=Year)),
-    options = list(searching = FALSE)
+    options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
   )
   
   # formula  ----------------------------------------------------------------------------------------------
