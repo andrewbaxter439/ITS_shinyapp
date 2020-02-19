@@ -1,18 +1,22 @@
 ui <- function(request){
    fluidPage(
-  # tags$head(
-  #   tags$style(
-  #     HTML(
-  #       "
-  #       #DataTables_Table_0 tr:hover{
-  #         background-color: #dddddd;
-  #       }
-  #       "
-  #     )
-  #   )
-  # ),
   theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
-  titlePanel("ITS analyses of England's Teenage Pregnancy Strategy"),
+  tags$head(
+    # tags$link(rel="icon", href="favicon.ico", type = "image/x-icon"),
+    tags$link(type = "text/css", rel = "stylesheet", href = "projstyle.css"),
+    tags$link(rel="shortcut icon", href="favicon.ico", type = "image/x-icon"),
+    tags$style(
+      HTML(
+        "
+        .dataTable tbody tr:hover{
+          background-color: #e6e6ff;
+        }
+        "
+      )
+    )
+  ),
+  titlePanel(h2(style = "font-weight: 900;", "ITS analyses of England's Teenage Pregnancy Strategy"), 
+             windowTitle = "ITS analyses of England's Teenage Pregnancy Strategy"),
   withMathJax(),
   sidebarLayout(
     
@@ -23,6 +27,7 @@ ui <- function(request){
         tags$style(type="text/css", "#inline label{ display: table-cell; text-align: center; vertical-align: middle; } 
                    #inline .form-group { display: table-row;}")
         ),
+      fluidRow(style = "margin: 0px;",
       selectInput(inputId = "ages",
                   label = "Age group:",
                   choices = c("Under 16", "Under 18", "Under 20"),
@@ -38,7 +43,7 @@ ui <- function(request){
       uiOutput("dateslider"),
       uiOutput("intyr1slider"),
       checkboxInput(inputId = "int2",
-                    label = "Intervention 2",
+                    label = "Common shock",
                     value = FALSE),
       uiOutput("intyr2slider"),
       checkboxInput(inputId = "pi1",
@@ -55,26 +60,34 @@ ui <- function(request){
       h6("Autoregression correction"),
       column(6, numericInput("p", "AR: ", 0, min = 0)),
       column(6, numericInput("q", "MA: ", 0, min = 0)),
+      ),
+      fluidRow(style = "margin: 0px;",
       h4("Download Graph"),
       column(4, numericInput("width", "Width (mm)", 200)),
       column(4, numericInput("height", "Height (mm)", 150)),
       column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
-      fluidRow(
+      ),
+      fluidRow(style = "margin: 0px;",
       column(6, 
-      downloadButton("dlppt", label = "Download .pptx")
+      # downloadButton("ggplot", label = "Download ggplot")
+      downloadButton("dlppt", label = "Download .pptx",
+                     style = "background-color: #c6c6e3; border-color: #9a9ab9;")
              ),
       column(6,
-      downloadButton("dlgraph", label = "Download image")
+      downloadButton("dlgraph", label = "Download image",
+                     style = "background-color: #c6c6e3; border-color: #9a9ab9;")
       )
       ),
       br(),
-      fluidRow(
+      fluidRow(style = "margin: 0px;",
         h4("Download analysis report (.docx)"),
         column(6, 
-               downloadButton("downloadReport", label = "Download report")
+               downloadButton("downloadReport", label = "Download report", 
+                              style = "background-color: #c6c6e3; border-color: #9a9ab9;")
         ),
         column(6,
-               bookmarkButton("Save analysis", title = "Copy url with current values")
+               bookmarkButton("Save analysis", title = "Copy url with current values", 
+                              style = "background-color: #c6c6e3; border-color: #9a9ab9;")
         ),
       )
     ),
@@ -107,11 +120,11 @@ ui <- function(request){
                           div(id = "equation",
                            column(12, align = "center", uiOutput(outputId = "equation"))
                           ),
-                           dataTableOutput(outputId = "modelsummary")
+                           DT::dataTableOutput(outputId = "modelsummary")
                            ),
                   
                   tabPanel("Confidence Intervals",
-                                      dataTableOutput((outputId = "confint")),
+                                      DT::dataTableOutput((outputId = "confint")),
                            # textOutput("form2"),
                            downloadButton("dlconfints")
                   ),
@@ -120,17 +133,17 @@ ui <- function(request){
                            h3("Autocorrelation plots"), p("Residuals plotted by time, and autocorrelation and partial-autocorrelation function plots"),
                            plotOutput("autocorr"),
                            h3("Durbin-Watson test"),
-                           dataTableOutput("dwt"),
+                           DT::dataTableOutput("dwt"),
                            br(),
                            # htmlOutput(outputId = "corrcompare")
                            h4(textOutput("pplus1_title")),
-                           dataTableOutput("pplus1"),
+                           DT::dataTableOutput("pplus1"),
                            h4(textOutput("qplus1_title")),
-                           dataTableOutput("qplus1")
+                           DT::dataTableOutput("qplus1")
                            ),
                   
-                  tabPanel("Dataframe for model", dataTableOutput(outputId = "dataframesumm"))
-                  # tabPanel("Dataframe for model", dataTableOutput(outputId = "fulldata"))
+                  tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dataframesumm"))
+                  # tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "fulldata"))
       )
     )
   )

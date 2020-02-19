@@ -68,7 +68,17 @@ server <- function(input, output, session) {
   output$dlgraph <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".", input$format)},
     content = function(file) {
-      ggsave(file, PlotInput(), dpi = 400, units = "mm", width = input$width, height = input$height)
+      graph <- PlotInput() +
+               # ggtitle(paste(input$main,
+               #               ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
+               #               input$obRange[1], "-",
+               #               input$obRange[2],
+               #               sep=" ")) +
+               theme(title = element_text(size = 14), 
+                     axis.title = element_text(size = 12),
+                     legend.text = element_text(size = 12))
+      ggsave(file, graph,
+             dpi = 400, units = "mm", width = input$width, height = input$height)
     },
     contentType = paste0("image/", input$format)
   )
@@ -77,6 +87,13 @@ server <- function(input, output, session) {
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".pptx")},
     content = function(file){graph2ppt(PlotInput() + theme(text = element_text(size = 16), line = element_blank()), file = file, height = input$height/25.4, width = input$width/25.4)}
   )
+
+  #   output$ggplot <- downloadHandler(
+  #   filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".rdata")},
+  #   content = function(file){
+  #     graph <- renderPlot(PlotInput())
+  #     save(graph, file = file)}
+  # )
   
   
   
@@ -135,7 +152,7 @@ server <- function(input, output, session) {
   
   output$intyr2slider <- renderUI ({
     sliderInput(inputId = "int2yr",
-                label = "Beginning of intervention 2:",
+                label = "Post-intervention common shock:",
                 min = startYr()+2,
                 max = maxYr()-2,
                 step = 1,
@@ -191,8 +208,8 @@ server <- function(input, output, session) {
   # Dataframe setup --------------------------------------------------------------------------------------------
   
   load("data/all_uk_rates.rdata")
-  # output$fulldata <- renderDataTable(modcfac())
-  output$fulldata <- renderDataTable(all_UK_rates[[input$ages]])
+  # output$fulldata <- DT::renderDataTable(modcfac())
+  output$fulldata <- DT::renderDataTable(all_UK_rates[[input$ages]])
   
   dfa <- reactive({
     all_UK_rates[[input$ages]] %>% 
@@ -260,7 +277,7 @@ server <- function(input, output, session) {
   #     geom_point() + geom_smooth(method = "lm", se = FALSE)
   # })  # Simple plot (not used)
   
-  output$dataframesumm <- renderDataTable(
+  output$dataframesumm <- DT::renderDataTable(
     (arrange(dfc(), by=Year)),
     options = list(searching = FALSE)
   )
@@ -274,19 +291,20 @@ server <- function(input, output, session) {
         ifelse(input$control == "none", "", paste0(" + England", ifelse(input$parallel, "", " + Time_Eng"))),
         " + Cat1 + Trend1",
         ifelse(input$control == "none", "", " + Cat1_Eng + Trend1_Eng"),
-        ifelse(input$int2,
-               paste0(" + Cat2 + Trend2",
-                      ifelse(input$control == "none", "", " + Cat2_Eng + Trend2_Eng")
-               ),
-               ""
-        ),
+        ifelse(input$int2, " + Trend2", ""),
+        # ifelse(input$int2,
+        #        paste0(" + Trend2",
+        #               ifelse(input$control == "none", "", " + Trend2_Eng")
+        #        ),
+        #        ""
+        # ),
         ifelse(input$pillscare, " + PillScare", "")
       )
     )
   })
   # 
-  output$form1 <- renderText({as.character(predict(modelGls_null()))})
-  # output$form2 <- renderText({as.character(modelGls_null()$call$model[3])})
+  # output$form1 <- renderText({as.character(predict(modelGls_null()))})
+  output$form2 <- renderText({deparse(mod_formula())})
   
   # Construct model --------------------------------------------------------------------------------------------
   
@@ -596,8 +614,8 @@ server <- function(input, output, session) {
   
   # Outputting tables ------------------------------------------------------------------------------------------
   
-  output$confint<- renderDataTable(confintervals() %>% select(-Std.Error), 
-                                   options = list(searching = FALSE, paging = FALSE, info = FALSE))
+  output$confint<- DT::renderDataTable(confintervals() %>% select(-Std.Error), 
+                                   options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
   confintervals <- reactive({
     modelTable() %>%
@@ -608,8 +626,8 @@ server <- function(input, output, session) {
   
   
   
-  output$modelsummary <- renderDataTable(
-    modelTable(), options = list(searching = FALSE, paging = FALSE, info = FALSE)
+  output$modelsummary <- DT::renderDataTable(
+    modelTable(), options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
   )
   
   # Create cfac --------------------------------------------------------
@@ -619,10 +637,12 @@ server <- function(input, output, session) {
       if(input$int2) {
         tibble(
           Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
-          Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
-          Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
+          Cat1       = 0,
+          Trend1     = 0,
+          # Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
+          # Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2       = 0,
-          Trend2     = 0,
+          Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr() - input$int2yr + 1)),
           PillScare  = 1,
           Value = 1
         ) 
@@ -647,8 +667,10 @@ server <- function(input, output, session) {
           Trend1     = c(1:(maxYr()-startYr()+1)),
           Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
           Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr()-input$int2yr+1)), 
-          Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
-          Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
+          Cat1_Eng   = 1,
+          Trend1_Eng = 1,
+          # Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
+          # Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2_Eng   = 0,
           Trend2_Eng = 0,
           PillScare  = 1,
@@ -684,7 +706,7 @@ server <- function(input, output, session) {
   })
   
   
-  output$cfac <- renderDataTable(modcfac())
+  output$cfac <- DT::renderDataTable(modcfac())
   
   ylim <- reactive({
     c(0, 1.1*max(modcfac()$HiCI, dfd()$Value))
@@ -705,7 +727,7 @@ server <- function(input, output, session) {
       mutate(Predict = predict(model, newdata = .))# Add Predicts for non-England
   })
   
-  output$dfd <- renderDataTable(dfd())
+  output$dfd <- DT::renderDataTable(dfd(), options = list(ordering = FALSE))
   
   
   # Output equation --------------------------------------------------------------------------------------------
@@ -722,8 +744,8 @@ server <- function(input, output, session) {
       }
     } else {
       if (input$control == "none") {
-        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention_1+\\beta_3*Trend_1+$$
-        $$\\beta_4*Intervention_2+\\beta_5*Trend_2+\\epsilon$$"
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention_1+$$
+        $$\\beta_3*Trend_1+\\beta_4*Trend_2+\\epsilon$$"
       } else if (!input$parallel) {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+
         \\beta_2*Group+
@@ -731,11 +753,8 @@ server <- function(input, output, session) {
         \\beta_4*Intervention_1+$$
         $$\\beta_5*Trend_1+
         \\beta_6*Group*Intervention_1+
-        \\beta_7*Group*Trend_1+
-        \\beta_8*Intervention_2+$$
-        $$\\beta_9*Trend_2+
-        \\beta_{10}*Group*Intervention_2+
-        \\beta_{11}*Group*Trend_2+
+        \\beta_7*Group*Trend_1+$$
+        $$\\beta_8*Trend_2+
         \\epsilon$$" 
       } else {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+
@@ -743,11 +762,8 @@ server <- function(input, output, session) {
         \\beta_3*Intervention_1+
         \\beta_4*Trend_1+$$
         $$\\beta_5*Group*Intervention_1+
-        \\beta_6*Group*Trend_1+
-        \\beta_7*Intervention_2+$$
-        $$\\beta_8*Trend_2+
-        \\beta_9*Group*Intervention_2+
-        \\beta_{10}*Group*Trend_2+
+        \\beta_6*Group*Trend_1+$$
+        $$\\beta_7*Trend_2+
         \\epsilon$$" 
       }
     }
@@ -792,7 +808,8 @@ server <- function(input, output, session) {
         Value,
         col = Country,
         fill = Country,
-        group = interaction(Country, Cat1, Cat2)
+          group = Cat1,
+        # group = interaction(Country, Cat1, Cat2)
       )) +
       # Counterfactual confidence intervals (not shown in legend)
       geom_ribbon(
@@ -803,7 +820,7 @@ server <- function(input, output, session) {
           ymax=HiCI,
           group = interaction(Cat1, Cat2),
           col=NULL,
-          fill= ifelse(input$ribbons,"Prediction","#00000000")
+          fill= ifelse(input$ribbons,"No Strategy","#00000000")
         ),
         alpha=0.5,
         size = 1,
@@ -842,8 +859,8 @@ server <- function(input, output, session) {
         aes(
           x = Time,
           y = Predict,
-          group = interaction(Cat1, Cat2),
-          col = "Prediction",
+          # group = interaction(Cat1, Cat2),
+          col = "No Strategy",
           fill = NULL
         ),
         linetype = "longdash",
@@ -855,9 +872,9 @@ server <- function(input, output, session) {
       geom_vline(xintercept = input$int1yr-input$obRange[1]+0.5,
                  linetype = "dotted",
                  col = "#000000CC") +
-      geom_vline(xintercept = input$int2yr-input$obRange[1]+0.5,
-                 linetype = "dotted",
-                 col = ifelse(input$int2, "#000000CC", NA)) +
+      # geom_vline(xintercept = input$int2yr-input$obRange[1]+0.5,
+      #            linetype = "dotted",
+      #            col = ifelse(input$int2, "#000000CC", NA)) +
       geom_rect(
         xmin = input$int1yr-input$obRange[1]+0.5,
         xmax = input$pi1yr-input$obRange[1]+1.5,
@@ -870,6 +887,7 @@ server <- function(input, output, session) {
       # Display parameters
       theme(panel.background = element_blank(),
             legend.key  = element_blank(),
+            legend.position = "none",
             panel.grid = element_blank()) +
       ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
@@ -881,12 +899,14 @@ server <- function(input, output, session) {
       # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_x_continuous(limits = c(mnlbTm, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
-        breaks = c("England", "Wales", "Scotland", "England and Wales", "Prediction"),
+        name = "",
+        breaks = c("England", "Wales", "Scotland", "England and Wales", "No Strategy"),
         values = c("England" = "#CF142B",
                    "Wales" = WalCol,
                    "Scotland" = ScoCol,
                    "England and Wales" = "#A50115",
-                   "Prediction" = "#FFC000"),
+                   "No Strategy" = "#FFC000"),
+        labels = c("Strategy - Observed", "Wales", "Scotland", "England and Wales", "No Strategy"),
         aesthetics = c("colour", "fill"))
   })
   
@@ -894,11 +914,11 @@ server <- function(input, output, session) {
   # autocorr tests ---------------------------------------------------------------------------------------------
   
   
-  output$dwt <- renderDataTable(
+  output$dwt <- DT::renderDataTable(
     (
       data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
     ),
-    options = list(searching = FALSE, paging = FALSE, info = FALSE)
+    options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
   )
   
   output$autocorr <- renderPlot({
@@ -936,7 +956,7 @@ server <- function(input, output, session) {
   
   output$pplus1_title <- renderText({paste0("ANOVA comparison with model ", pplus1_text(), ":")})
   
-  output$pplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
+  output$pplus1 <- DT::renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
     
     model <- modelGls_null()
     model$call[[2]] <- mod_formula()
@@ -951,7 +971,7 @@ server <- function(input, output, session) {
   
   output$qplus1_title <- renderText({paste0("ANOVA comparison with model ", qplus1_text(), ":")})
   
-  output$qplus1 <- renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
+  output$qplus1 <- DT::renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
     model <- modelGls_null()
     model$call[[2]] <- mod_formula()
     
