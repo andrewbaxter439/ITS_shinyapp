@@ -538,7 +538,10 @@ server <- function(input, output, session) {
       signif(3)
   })
   
-  output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup> = ", rSq(), "; MSPE = ", mspe())))
+  output$rSquared <- renderUI({
+    req(rSq())
+    HTML(paste0("R<sup>2</sup> = ", rSq(), "; MSPE = ", mspe()))
+    })
   # output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
   
   interceptName <- reactive({
