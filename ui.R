@@ -1,22 +1,30 @@
 ui <- function(request){
    fluidPage(
-  theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
+  theme = "its_theme.css",
+  # theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
   tags$head(
     # tags$link(rel="icon", href="favicon.ico", type = "image/x-icon"),
-    tags$link(type = "text/css", rel = "stylesheet", href = "projstyle.css"),
+    # tags$link(type = "text/css", rel = "stylesheet", href = "projstyle.css"),
     tags$link(rel="shortcut icon", href="favicon.ico", type = "image/x-icon"),
-    tags$style(
-      HTML(
-        "
-        .dataTable tbody tr:hover{
-          background-color: #e6e6ff;
-        }
-        "
-      )
-    )
+    # tags$style(
+    #   HTML(
+    #     "
+    #     .dataTable tbody tr:hover{
+    #       background-color: #e6e6ff;
+    #     }
+    #     "
+    #   )
+    # )
   ),
-  titlePanel(h2(style = "font-weight: 900;", "ITS analyses of England's Teenage Pregnancy Strategy"), 
-             windowTitle = "ITS analyses of England's Teenage Pregnancy Strategy"),
+  
+   # div(id = "cont_head",
+   #     div(id = "header",
+   #      h2(style = "font-weight: 900; padding-left: 15px", "ITS analyses of England's Teenage Pregnancy Strategy")
+   #    )),
+  titlePanel(
+        h2(style = "font-weight: 900;", "ITS analyses of England's Teenage Pregnancy Strategy",
+      ),
+    windowTitle = "ITS analyses of England's Teenage Pregnancy Strategy"),
   withMathJax(),
   sidebarLayout(
     
@@ -70,24 +78,20 @@ ui <- function(request){
       fluidRow(style = "margin: 0px;",
       column(6, 
       # downloadButton("ggplot", label = "Download ggplot")
-      downloadButton("dlppt", label = "Download .pptx",
-                     style = "background-color: #c6c6e3; border-color: #9a9ab9;")
+      downloadButton("dlppt", label = "Download .pptx")
              ),
       column(6,
-      downloadButton("dlgraph", label = "Download image",
-                     style = "background-color: #c6c6e3; border-color: #9a9ab9;")
+      downloadButton("dlgraph", label = "Download image")
       )
       ),
       br(),
       fluidRow(style = "margin: 0px;",
         h4("Download analysis report (.docx)"),
         column(6, 
-               downloadButton("downloadReport", label = "Download report", 
-                              style = "background-color: #c6c6e3; border-color: #9a9ab9;")
+               downloadButton("downloadReport", label = "Download report")
         ),
         column(6,
-               bookmarkButton("Save analysis", title = "Copy url with current values", 
-                              style = "background-color: #c6c6e3; border-color: #9a9ab9;")
+               bookmarkButton("Save analysis", title = "Copy url with current values")
         ),
       )
     ),
@@ -120,11 +124,11 @@ ui <- function(request){
                           div(id = "equation",
                            column(12, align = "center", uiOutput(outputId = "equation"))
                           ),
-                           DT::dataTableOutput(outputId = "modelsummary")
+                           shiny::dataTableOutput(outputId = "modelsummary")
                            ),
                   
                   tabPanel("Confidence Intervals",
-                                      DT::dataTableOutput((outputId = "confint")),
+                                      shiny::dataTableOutput((outputId = "confint")),
                            # textOutput("form2"),
                            br(),
                            downloadButton("dlconfints")
@@ -134,17 +138,17 @@ ui <- function(request){
                            h3("Autocorrelation plots"), p("Residuals plotted by time, and autocorrelation and partial-autocorrelation function plots"),
                            plotOutput("autocorr"),
                            h3("Durbin-Watson test"),
-                           DT::dataTableOutput("dwt"),
+                           shiny::dataTableOutput("dwt"),
                            br(),
                            # htmlOutput(outputId = "corrcompare")
                            h4(textOutput("pplus1_title")),
-                           DT::dataTableOutput("pplus1"),
+                           shiny::dataTableOutput("pplus1"),
                            h4(textOutput("qplus1_title")),
-                           DT::dataTableOutput("qplus1")
+                           shiny::dataTableOutput("qplus1")
                            ),
                   
-                  tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dataframesumm"))
-                  # tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "fulldata"))
+                  tabPanel("Dataframe for model", shiny::dataTableOutput(outputId = "dataframesumm"))
+                  # tabPanel("Dataframe for model", shiny::dataTableOutput(outputId = "fulldata"))
       )
     )
   )

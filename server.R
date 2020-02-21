@@ -208,8 +208,8 @@ server <- function(input, output, session) {
   # Dataframe setup --------------------------------------------------------------------------------------------
   
   load("data/all_uk_rates.rdata")
-  # output$fulldata <- DT::renderDataTable(modcfac())
-  output$fulldata <- DT::renderDataTable(all_UK_rates[[input$ages]], options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
+  # output$fulldata <- shiny::renderDataTable(modcfac())
+  output$fulldata <- shiny::renderDataTable(all_UK_rates[[input$ages]], options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
   dfa <- reactive({
     all_UK_rates[[input$ages]] %>% 
@@ -277,7 +277,7 @@ server <- function(input, output, session) {
   #     geom_point() + geom_smooth(method = "lm", se = FALSE)
   # })  # Simple plot (not used)
   
-  output$dataframesumm <- DT::renderDataTable(
+  output$dataframesumm <- shiny::renderDataTable(
     (arrange(dfc(), by=Year)),
     options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
   )
@@ -539,7 +539,7 @@ server <- function(input, output, session) {
   })
   
   output$rSquared <- renderUI({
-    req(rSq())
+    req(input$obrange)
     HTML(paste0("R<sup>2</sup> = ", rSq(), "; MSPE = ", mspe()))
     })
   # output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
@@ -557,7 +557,7 @@ server <- function(input, output, session) {
   
   
   
-  modelTable <- reactive({  # labelling coefficients
+  modelTable <- reactive({# labelling coefficients
     labs <-   tibble(lab1 = c("(Intercept)",
                               "Time",
                               "England",
@@ -580,7 +580,7 @@ server <- function(input, output, session) {
                               paste0(input$main, " difference in level from control at intervention 1"),
                               paste0(input$main, " difference in trend from control at intervention 1"),
                               paste0(interceptName(), " change in level at intervention 2"),
-                              paste0(interceptName(), " change in trend at intervention 2"),
+                              paste0(interceptName(), " change in trend at ", input$int2yr, " common shock"),
                               paste0(input$main, " difference in level from control at intervention 2"),
                               paste0(input$main, " difference in trend from control at intervention 2"),
                               "'Pill Scare' corrector"
@@ -617,7 +617,7 @@ server <- function(input, output, session) {
   
   # Outputting tables ------------------------------------------------------------------------------------------
   
-  output$confint<- DT::renderDataTable(confintervals() %>% select(-Std.Error), 
+  output$confint<- shiny::renderDataTable(confintervals() %>% select(-Std.Error), 
                                    options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
   confintervals <- reactive({
@@ -629,8 +629,9 @@ server <- function(input, output, session) {
   
   
   
-  output$modelsummary <- DT::renderDataTable(
-    modelTable(), options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
+  output$modelsummary <- shiny::renderDataTable({
+    req(input$int1yr)
+    modelTable()}, options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
   )
   
   # Create cfac --------------------------------------------------------
@@ -709,7 +710,7 @@ server <- function(input, output, session) {
   })
   
   
-  output$cfac <- DT::renderDataTable(modcfac())
+  output$cfac <- shiny::renderDataTable(modcfac())
   
   ylim <- reactive({
     c(0, 1.1*max(modcfac()$HiCI, dfd()$Value))
@@ -730,7 +731,7 @@ server <- function(input, output, session) {
       mutate(Predict = predict(model, newdata = .))# Add Predicts for non-England
   })
   
-  output$dfd <- DT::renderDataTable(dfd(), options = list(ordering = FALSE))
+  output$dfd <- shiny::renderDataTable(dfd(), options = list(ordering = FALSE))
   
   
   # Output equation --------------------------------------------------------------------------------------------
@@ -917,7 +918,7 @@ server <- function(input, output, session) {
   # autocorr tests ---------------------------------------------------------------------------------------------
   
   
-  output$dwt <- DT::renderDataTable(
+  output$dwt <- shiny::renderDataTable(
     (
       data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
     ),
@@ -959,7 +960,7 @@ server <- function(input, output, session) {
   
   output$pplus1_title <- renderText({paste0("ANOVA comparison with model ", pplus1_text(), ":")})
   
-  output$pplus1 <- DT::renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
+  output$pplus1 <- shiny::renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
     
     model <- modelGls_null()
     model$call[[2]] <- mod_formula()
@@ -974,7 +975,7 @@ server <- function(input, output, session) {
   
   output$qplus1_title <- renderText({paste0("ANOVA comparison with model ", qplus1_text(), ":")})
   
-  output$qplus1 <- DT::renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
+  output$qplus1 <- shiny::renderDataTable(options = list(searching = FALSE, paging = FALSE, info = FALSE), {
     model <- modelGls_null()
     model$call[[2]] <- mod_formula()
     
