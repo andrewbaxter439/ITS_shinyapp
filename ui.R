@@ -124,11 +124,11 @@ ui <- function(request){
                           div(id = "equation",
                            column(12, align = "center", uiOutput(outputId = "equation"))
                           ),
-                           shiny::dataTableOutput(outputId = "modelsummary")
+                           DT::dataTableOutput(outputId = "modelsummary")
                            ),
                   
                   tabPanel("Confidence Intervals",
-                                      shiny::dataTableOutput((outputId = "confint")),
+                                      DT::dataTableOutput((outputId = "confint")),
                            # textOutput("form2"),
                            br(),
                            downloadButton("dlconfints")
@@ -138,17 +138,17 @@ ui <- function(request){
                            h3("Autocorrelation plots"), p("Residuals plotted by time, and autocorrelation and partial-autocorrelation function plots"),
                            plotOutput("autocorr"),
                            h3("Durbin-Watson test"),
-                           shiny::dataTableOutput("dwt"),
+                           DT::dataTableOutput("dwt"),
                            br(),
                            # htmlOutput(outputId = "corrcompare")
                            h4(textOutput("pplus1_title")),
-                           shiny::dataTableOutput("pplus1"),
+                           DT::dataTableOutput("pplus1"),
                            h4(textOutput("qplus1_title")),
-                           shiny::dataTableOutput("qplus1")
+                           DT::dataTableOutput("qplus1")
                            ),
                   
-                  tabPanel("Dataframe for model", shiny::dataTableOutput(outputId = "dataframesumm"))
-                  # tabPanel("Dataframe for model", shiny::dataTableOutput(outputId = "fulldata"))
+                  tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dataframesumm"))
+                  # tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "fulldata"))
       )
     )
   )
