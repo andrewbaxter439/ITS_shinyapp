@@ -279,7 +279,7 @@ server <- function(input, output, session) {
   
   output$dataframesumm <- DT::renderDataTable(
     (arrange(dfc(), by=Year)),
-    options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
+    options = list(searching = FALSE, paging = FALSE, info = FALSE)
   )
   
   # formula  ----------------------------------------------------------------------------------------------
@@ -671,7 +671,7 @@ server <- function(input, output, session) {
           Trend1     = c(1:(maxYr()-startYr()+1)),
           Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
           Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr()-input$int2yr+1)), 
-          Cat1_Eng   = 1,
+          Cat1_Eng   = 0,
           Trend1_Eng = 1,
           # Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
           # Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
