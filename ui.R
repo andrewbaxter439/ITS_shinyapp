@@ -8,15 +8,9 @@ ui <- function(request){
     tags$link(rel="shortcut icon", href="favicon.ico", type = "image/x-icon"),
     # tags$style(
     #   HTML(
-    #     "
-    #     .dataTable tbody tr:hover{
-    #       background-color: #e6e6ff;
-    #     }
-    #     "
     #   )
     # )
   ),
-  
    # div(id = "cont_head",
    #     div(id = "header",
    #      h2(style = "font-weight: 900; padding-left: 15px", "ITS analyses of England's Teenage Pregnancy Strategy")
@@ -48,6 +42,7 @@ ui <- function(request){
                   label = "Country to compare:",
                   choices = c("Scotland", "England", "Wales", "England and Wales", "none"),
                   selected = "none"),
+      # sliderInput("null", "null", 1, 10, 5, 1),
       uiOutput("dateslider"),
       uiOutput("intyr1slider"),
       checkboxInput(inputId = "int2",

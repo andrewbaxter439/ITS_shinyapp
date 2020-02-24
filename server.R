@@ -5,6 +5,7 @@ require(car)
 require(export)
 require(svglite)
 require(XLConnect)
+require(shinyWidgets)
 
 
 # Setup data and functions -----------------------------------------------------------------------------------
