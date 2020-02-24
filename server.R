@@ -5,7 +5,6 @@ require(car)
 require(export)
 require(svglite)
 require(XLConnect)
-require(shinyWidgets)
 
 
 # Setup data and functions -----------------------------------------------------------------------------------
@@ -1000,9 +999,9 @@ server <- function(input, output, session) {
   output$downloadReport <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".docx")},
     content = function(file) {
-      tempReport <- file.path(tempdir(), "report.Rmd")
+      tempReport <- file.path(tempdir(), "report.rmd")
       tempTemplate <- file.path(tempdir(), "report_template.docx")
-      file.copy("report.Rmd", tempReport, overwrite = TRUE)
+      file.copy("report.rmd", tempReport, overwrite = TRUE)
       file.copy("report_template.docx", tempTemplate, overwrite = TRUE)
       params <- list(
         set_title = paste(input$main,
