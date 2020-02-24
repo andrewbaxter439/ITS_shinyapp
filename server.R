@@ -920,7 +920,10 @@ server <- function(input, output, session) {
   
   output$dwt <- DT::renderDataTable(
     (
-      data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% rename(Autocorrelation =r, DW_Stat = dw, pvalue=p)
+      data.frame(lag = 1:12, dwt(modelGls(), max.lag = 12, alternative = "two.sided")[1:3]) %>% 
+        rename(Autocorrelation =r, DW_Stat = dw, pvalue=p) %>% 
+        mutate_if(is.double, round, 3)
+      
     ),
     options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE)
   )
@@ -968,7 +971,8 @@ server <- function(input, output, session) {
     model %>% 
       update(correlation = corARMA(p = input$p + 1, q = input$q,
                                    form = ~ Time | England)) %>% 
-      anova(model, .)%>% 
+      anova(model, .) %>% 
+      mutate_if(is.double, signif, digits = 4) %>% 
       mutate(call = c(modelText(), pplus1_text())) })
   
   qplus1_text <- renderText({paste0("AR", input$p, ", MA", input$q+1)})
@@ -983,6 +987,7 @@ server <- function(input, output, session) {
       update(correlation = corARMA(p = input$p, q = input$q + 1,
                                    form = ~ Time | England)) %>% 
       anova(model,.)%>% 
+      mutate_if(is.double, signif, digits = 4) %>% 
       mutate(call = c(modelText(), qplus1_text()))
   })
   
