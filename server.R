@@ -2,10 +2,9 @@ require(tidyverse)
 require(broom)
 require(nlme)
 require(car)
-require(export)
 require(svglite)
 require(XLConnect)
-
+require(officer)
 
 # Setup data and functions -----------------------------------------------------------------------------------
 
@@ -82,10 +81,19 @@ server <- function(input, output, session) {
     },
     contentType = paste0("image/", input$format)
   )
+
+# ppt graph output --------------------------------------------------------
+
   
   output$dlppt <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".pptx")},
-    content = function(file){graph2ppt(PlotInput() + theme(text = element_text(size = 16), line = element_blank()), file = file, height = input$height/25.4, width = input$width/25.4)}
+    content = function(file){
+      plot <- PlotInput() + theme(text = element_text(size = 16), line = element_blank())
+      doc <- read_pptx()
+      doc <- add_slide(doc)
+      doc <- ph_with(doc, value = plot, location = ph_location(height = input$height/25.4, width = input$width/25.4))
+      print(doc, target = file)
+      }
   )
 
   #   output$ggplot <- downloadHandler(
