@@ -40,6 +40,13 @@ div #headtext:after {
 	border-bottom: 5px solid white;
 }
 
+@media only screen and (max-width: 600px) {
+	div #headtext:after {
+		height: 140px;
+		border-bottom: 0;
+	}
+}
+
 .datatables thead {
 	background-color: #003865;
 	color: #ffffff;
@@ -7484,7 +7491,13 @@ th.visible-print,td.visible-print{
 
 .btn{
 	padding:8px 12px;
-	min-width: 163px;
+	/*min-width: 163px;*/
+}
+
+.col-sm-6>.btn{
+	width: 163px;
+    max-width: 112%;
+}
 }
 
 .btn-lg{
