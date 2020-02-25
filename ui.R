@@ -12,11 +12,12 @@ ui <- function(request){
     # )
   ),
    # div(id = "cont_head",
-   #     div(id = "header",
    #      h2(style = "font-weight: 900; padding-left: 15px", "ITS analyses of England's Teenage Pregnancy Strategy")
    #    )),
+  # div(id = "header"), 
   titlePanel(
-        h2(style = "font-weight: 900;", "ITS analyses of England's Teenage Pregnancy Strategy",
+        div(id = "headtext", style = "font-weight: 900;", "ITS analyses of England's Teenage Pregnancy Strategy",
+       
       ),
     windowTitle = "ITS analyses of England's Teenage Pregnancy Strategy"),
   withMathJax(),

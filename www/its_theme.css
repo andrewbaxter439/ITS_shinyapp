@@ -17,11 +17,27 @@ body{
 
 #header {
 	position: static;
-	top: -15pxpx;
-	left: -15px;
 	width: 100vw;
 	height: 66.5px;
-	background-color: #0000ff
+	background-color: #00cc00;
+}
+
+#headtext {
+	color: white;
+	margin-bottom: 20px;
+}
+
+div #headtext:after {
+	content: '';
+	position: absolute;
+	z-index: -1;
+	left: 0px;
+	top: 0px;
+	width: 100vw;
+	/*height: 100%;*/
+	height: 124px;
+	background-color: #0075B0;
+	border-bottom: 5px solid white;
 }
 
 .datatables thead {
@@ -3509,8 +3525,8 @@ a.btn.disabled,fieldset[disabled] a.btn{
 }
 
 .btn-default:hover{
-	color:#ffffff;
-	background-color: #003865;
+	color:#003865;
+	background-color: #ffffff;
 	border-color: #003865;
 }
 
@@ -4396,7 +4412,7 @@ textarea.input-group-sm>.form-control,textarea.input-group-sm>.input-group-addon
 }
 
 .nav-tabs{
-	border-bottom:1px solid #dddddd
+	border-bottom:1px solid #ffffff
 }
 
 .nav-tabs>li{
@@ -4407,7 +4423,7 @@ textarea.input-group-sm>.form-control,textarea.input-group-sm>.input-group-addon
 .nav-tabs>li>a{
 	margin-right:2px;
 	line-height:1.4;
-	border:1px solid transparent;
+	border: 2px solid white;
 	border-radius:0 0 0 0
 }
 
@@ -7467,7 +7483,8 @@ th.visible-print,td.visible-print{
 }
 
 .btn{
-	padding:8px 12px
+	padding:8px 12px;
+	min-width: 163px;
 }
 
 .btn-lg{
