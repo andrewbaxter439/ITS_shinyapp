@@ -5,6 +5,7 @@ require(car)
 require(svglite)
 require(XLConnect)
 require(officer)
+require(rvg)
 
 # Setup data and functions -----------------------------------------------------------------------------------
 
@@ -91,7 +92,7 @@ server <- function(input, output, session) {
       plot <- PlotInput() + theme(text = element_text(size = 16), line = element_blank())
       doc <- read_pptx()
       doc <- add_slide(doc)
-      doc <- ph_with(doc, value = plot, location = ph_location(height = input$height/25.4, width = input$width/25.4))
+      doc <- ph_with(doc, dml(ggobj = plot), location = ph_location(height = input$height/25.4, width = input$width/25.4))
       print(doc, target = file)
       }
   )
