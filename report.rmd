@@ -10,13 +10,22 @@ output:
   github_document: default
 # params:
 #   set_title: none
-title: "`r params$set_title`"
+#title: "`r params$set_title`"
 ---
+## `r params$set_title`
 
-```{r plot, echo = FALSE, messages = FALSE, warnings = FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(dpi=300)
+```
+
+```{r plot, echo = FALSE, messages = FALSE, warning = FALSE}
 
 print(PlotInput())
 ```
+
+
+`r eqtext()`
+
 
 `r corr()`
 

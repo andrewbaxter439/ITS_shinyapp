@@ -34,10 +34,10 @@ div #headtext:after {
 	left: 0px;
 	top: 0px;
 	width: 100vw;
-	/*height: 100%;*/
 	height: 124px;
 	background-color: #0075B0;
 	border-bottom: 5px solid #F4F7F9;
+	max-width: 100%;
 }
 
 @media only screen and (max-width: 600px) {

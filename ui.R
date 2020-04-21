@@ -1,23 +1,12 @@
 ui <- function(request){
    fluidPage(
   theme = "its_theme.css",
-  # theme = shinythemes::shinytheme(theme = ifelse("shinythemes" %in% installed.packages()[,"Package"], "yeti", NULL)),
   tags$head(
-    # tags$link(rel="icon", href="favicon.ico", type = "image/x-icon"),
-    # tags$link(type = "text/css", rel = "stylesheet", href = "projstyle.css"),
     tags$link(rel="shortcut icon", href="favicon.ico", type = "image/x-icon"),
-    # tags$style(
-    #   HTML(
-    #   )
-    # )
   ),
-   # div(id = "cont_head",
-   #      h2(style = "font-weight: 900; padding-left: 15px", "ITS analyses of England's Teenage Pregnancy Strategy")
-   #    )),
-  # div(id = "header"), 
+
   titlePanel(
         div(id = "headtext", style = "font-weight: 900;", "ITS analyses of England's Teenage Pregnancy Strategy",
-       
       ),
     windowTitle = "ITS analyses of England's Teenage Pregnancy Strategy"),
   withMathJax(),

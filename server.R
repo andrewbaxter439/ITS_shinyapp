@@ -548,7 +548,7 @@ server <- function(input, output, session) {
   })
   
   output$rSquared <- renderUI({
-    req(input$obrange)
+    req(rSq())
     HTML(paste0("R<sup>2</sup> = ", rSq(), "; MSPE = ", mspe()))
     })
   # output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
@@ -744,8 +744,8 @@ server <- function(input, output, session) {
   
   
   # Output equation --------------------------------------------------------------------------------------------
-  output$equation <- renderUI({
-    eqtext <-   if (!input$int2){
+    eqtext <-   reactive({
+      eqtext <-   if (!input$int2){
       if (input$control == "none") {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention+\\beta_3*Trend+\\epsilon$$"
       } else if (!input$parallel) {
@@ -781,10 +781,9 @@ server <- function(input, output, session) {
       }
     }
     return(withMathJax(eqtext))
-
-    
   })
   
+  output$equation <- renderUI({eqtext()})
   # Output plot -----------------------------------------------------------------
   
   output$modelplot <- renderPlot({
@@ -905,8 +904,8 @@ server <- function(input, output, session) {
       ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
       # coord_cartesian(ylim = c(0, maxy)) +
-      # coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
-      coord_cartesian(ylim = c(0, 56)) +
+      coord_cartesian(ylim = c(0, 1.1*max(dfd()$Value, modcfac()$Predict))) +
+      # coord_cartesian(ylim = c(0, 56)) +
       # coord_cartesian(ylim = ylim()) +
       scale_y_continuous(expand = c(0, 0)) +
       # scale_x_continuous(limits = c(NA, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
