@@ -757,24 +757,24 @@ server <- function(input, output, session) {
       }
     } else {
       if (input$control == "none") {
-        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention_1+$$
+        "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention+$$
         $$\\beta_3*Trend_1+\\beta_4*Trend_2+\\epsilon$$"
       } else if (!input$parallel) {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+
         \\beta_2*Group+
         \\beta_3*Group*Time+
-        \\beta_4*Intervention_1+$$
+        \\beta_4*Intervention+$$
         $$\\beta_5*Trend_1+
-        \\beta_6*Group*Intervention_1+
+        \\beta_6*Group*Intervention+
         \\beta_7*Group*Trend_1+$$
         $$\\beta_8*Trend_2+
         \\epsilon$$" 
       } else {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+
         \\beta_2*Group+
-        \\beta_3*Intervention_1+
+        \\beta_3*Intervention+
         \\beta_4*Trend_1+$$
-        $$\\beta_5*Group*Intervention_1+
+        $$\\beta_5*Group*Intervention+
         \\beta_6*Group*Trend_1+$$
         $$\\beta_7*Trend_2+
         \\epsilon$$" 
