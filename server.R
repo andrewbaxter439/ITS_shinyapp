@@ -6,6 +6,7 @@ require(svglite)
 require(XLConnect)
 require(officer)
 require(rvg)
+require(DT)
 
 # Setup data and functions -----------------------------------------------------------------------------------
 
