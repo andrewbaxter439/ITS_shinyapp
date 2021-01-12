@@ -45,10 +45,10 @@ constructCIRibbon <- function(newdata, model, formula) {
   sds <- sqrt(diag(vars))
   
   df <- df %>% mutate(se = sds,
-                                lowCI = Predict - 1.96 * sds,
-                                HiCI = Predict + 1.96 * sds)
+                      lowCI = Predict - 1.96 * sds,
+                      HiCI = Predict + 1.96 * sds)
 }
-  
+
 
 printCoefficients <- function(model){
   as_tibble(trimws(format(round(summary(model)$tTable, 3), nsmall=3))) %>%
@@ -70,22 +70,22 @@ server <- function(input, output, session) {
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".", input$format)},
     content = function(file) {
       graph <- PlotInput() +
-               # ggtitle(paste(input$main,
-               #               ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
-               #               input$obRange[1], "-",
-               #               input$obRange[2],
-               #               sep=" ")) +
-               theme(title = element_text(size = 14), 
-                     axis.title = element_text(size = 12),
-                     legend.text = element_text(size = 12))
+        # ggtitle(paste(input$main,
+        #               ifelse(input$control=="none", "", paste("compared with", input$control, sep = " ")),
+        #               input$obRange[1], "-",
+        #               input$obRange[2],
+        #               sep=" ")) +
+        theme(title = element_text(size = 14), 
+              axis.title = element_text(size = 12),
+              legend.text = element_text(size = 12))
       ggsave(file, graph,
              dpi = 400, units = "mm", width = input$width, height = input$height)
     },
     contentType = paste0("image/", input$format)
   )
-
-# ppt graph output --------------------------------------------------------
-
+  
+  # ppt graph output --------------------------------------------------------
+  
   
   output$dlppt <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".pptx")},
@@ -95,9 +95,9 @@ server <- function(input, output, session) {
       doc <- add_slide(doc)
       doc <- ph_with(doc, dml(ggobj = plot), location = ph_location(height = input$height/25.4, width = input$width/25.4))
       print(doc, target = file)
-      }
+    }
   )
-
+  
   #   output$ggplot <- downloadHandler(
   #   filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".rdata")},
   #   content = function(file){
@@ -321,28 +321,28 @@ server <- function(input, output, session) {
   modelGls_null <- reactive({  # add if statements for each model
     
     if (input$p == 0 & input$q == 0){
-    model <- gls(
-      model = mod_formula(),
-      correlation = NULL,
-      data = dfc(),
-      method = "ML"
-    )
+      model <- gls(
+        model = mod_formula(),
+        correlation = NULL,
+        data = dfc(),
+        method = "ML"
+      )
     } else {
       if (input$control == "none") {
-    model <- gls(
-      model = mod_formula(),
-      correlation = corARMA(p=input$p, q=input$q, form = ~ Time),
-      data = dfc(),
-      method = "ML"
-    )
+        model <- gls(
+          model = mod_formula(),
+          correlation = corARMA(p=input$p, q=input$q, form = ~ Time),
+          data = dfc(),
+          method = "ML"
+        )
         
       } else {
-    model <- gls(
-      model = mod_formula(),
-      correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
-      data = dfc(),
-      method = "ML"
-    )
+        model <- gls(
+          model = mod_formula(),
+          correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
+          data = dfc(),
+          method = "ML"
+        )
       }
     }
     
@@ -398,7 +398,7 @@ server <- function(input, output, session) {
               correlation =  corARMA(p=input$p, q=input$q, form = ~ Time),
               method = "ML"
             )}
-
+        
       }
     } else if (input$parallel) {
       if (input$p == 0 & input$q == 0){
@@ -458,7 +458,7 @@ server <- function(input, output, session) {
               correlation =  corARMA(p=input$p, q=input$q, form = ~ Time | England),
               method = "ML"
             )}
-
+        
       }
     } else {
       if (input$p == 0 & input$q == 0){
@@ -521,7 +521,7 @@ server <- function(input, output, session) {
               correlation =  corARMA(p=input$p, q=input$q, form = ~ Time | England),
               method = "ML"
             )}
-
+        
       }
     }
   })
@@ -529,7 +529,7 @@ server <- function(input, output, session) {
   # Simple linear model ----------------------------------------------------------------------------------------
   
   modelGls <- reactive({  # model to check for autocorrelation
-
+    
     lm(
       mod_formula(),
       data = dfc()
@@ -551,7 +551,7 @@ server <- function(input, output, session) {
   output$rSquared <- renderUI({
     req(rSq())
     HTML(paste0("R<sup>2</sup> = ", rSq(), "; MSPE = ", mspe()))
-    })
+  })
   # output$rSquared <- renderUI(HTML(paste0("R<sup>2</sup>: ", signif(summary(modelGls())$r.squared,digits = 4))))
   
   interceptName <- reactive({
@@ -628,7 +628,7 @@ server <- function(input, output, session) {
   # Outputting tables ------------------------------------------------------------------------------------------
   
   output$confint<- DT::renderDataTable(confintervals() %>% select(-Std.Error), 
-                                   options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
+                                       options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
   confintervals <- reactive({
     modelTable() %>%
@@ -650,7 +650,7 @@ server <- function(input, output, session) {
     if(input$control == "none"){
       if(input$int2) {
         tibble(
-          Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Time       = c((startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
           Cat1       = 0,
           Trend1     = 0,
           # Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
@@ -662,7 +662,7 @@ server <- function(input, output, session) {
         ) 
       } else {
         tibble(
-          Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Time       = seq((startYr()-input$obRange[1]+0.5), (maxYr() - input$obRange[1]+1), 0.5),
           Cat1       = 0,
           Trend1     = 0,
           Cat2       = 0,
@@ -674,9 +674,9 @@ server <- function(input, output, session) {
     } else {
       if(input$int2) {
         tibble(
-          Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Time       = c((startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
           England    = 1,
-          Time_Eng   = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Time_Eng   = c((startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
           Cat1       = 1,
           Trend1     = c(1:(maxYr()-startYr()+1)),
           Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
@@ -693,11 +693,11 @@ server <- function(input, output, session) {
         ) 
       } else {
         tibble(
-          Time       = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Time       = seq((startYr()-input$obRange[1]+0.5), (maxYr() - input$obRange[1]+1), 0.5),
           England    = 1,
-          Time_Eng   = c((startYr()-input$obRange[1]+1):(maxYr() - input$obRange[1]+1)),
+          Time_Eng   = seq((startYr()-input$obRange[1]+0.5), (maxYr() - input$obRange[1]+1), 0.5),
           Cat1       = 1,
-          Trend1     = c(1:(maxYr()-startYr()+1)),
+          Trend1     = seq(0.5, (maxYr()-startYr()+1), 0.5),
           Cat2       = 0,
           Trend2     = 0,
           Cat1_Eng   = 0,
@@ -727,10 +727,10 @@ server <- function(input, output, session) {
   })
   
   
-
-# Final dataframe ---------------------------------------------------------
-
-
+  
+  # Final dataframe ---------------------------------------------------------
+  
+  
   dfd <- reactive({
     model <- modelGls_null()
     model$call[[2]] <- mod_formula()
@@ -745,8 +745,8 @@ server <- function(input, output, session) {
   
   
   # Output equation --------------------------------------------------------------------------------------------
-    eqtext <-   reactive({
-      eqtext <-   if (!input$int2){
+  eqtext <-   reactive({
+    eqtext <-   if (!input$int2){
       if (input$control == "none") {
         "Equation: $$Rate = \\beta_0+\\beta_1*Time+\\beta_2*Intervention+\\beta_3*Trend+\\epsilon$$"
       } else if (!input$parallel) {
@@ -821,7 +821,7 @@ server <- function(input, output, session) {
         Value,
         col = Country,
         fill = Country,
-          group = Cat1,
+        group = Cat1,
         # group = interaction(Country, Cat1, Cat2)
       )) +
       # Counterfactual confidence intervals (not shown in legend)
@@ -832,9 +832,10 @@ server <- function(input, output, session) {
           ymin = lowCI,
           ymax=HiCI,
           group = interaction(Cat1, Cat2),
-          col=NULL,
-          fill= ifelse(input$ribbons,"No Strategy","#00000000")
+          # fill= ifelse(input$ribbons,"No Strategy","#00000000"),
+          col=NULL
         ),
+        fill= ifelse(input$ribbons,"#dddddd","#ffffff"),
         alpha=0.5,
         size = 1,
         show.legend = FALSE,
@@ -845,27 +846,29 @@ server <- function(input, output, session) {
           x=Time,
           ymin = lowCI,
           ymax=HiCI,
-          col=NULL,
-          fill= ifelse(input$ribbons,Country,"#00000000")
+          # fill= ifelse(input$ribbons,Country,"#00000000"),
+          col=NULL
         ),
+        fill= ifelse(input$ribbons,"#dddddd","#ffffff"),
         alpha= 0.5,
         size = 1,
         show.legend = FALSE) +
       # control data points and trend line
-        geom_point(data=dfa2()%>%
-                     filter(Country == input$control,
-                            Year >= ifelse(input$grey, input$obRange[1], min(dfa2()$Year))),
-                   aes(Time, Value, col = Country),
-                   show.legend = FALSE,
-                   inherit.aes = FALSE) +
+      geom_point(data=dfa2()%>%
+                   filter(Country == input$control,
+                          Year >= ifelse(input$grey, input$obRange[1], min(dfa2()$Year))),
+                 aes(Time, Value, col = Country),
+                 shape = 3,
+                 show.legend = FALSE,
+                 inherit.aes = FALSE) +
       geom_line(data = . %>% filter(Country == input$control), aes(y=Predict), size = 1.5, alpha = alpha) +
-      # England data points and trend line
+      # England data points
       geom_point(data=dfa2()%>%
                    filter(Country != input$control),
                  aes(Time, Value, col = Country),
+                 shape = 3,
                  show.legend = FALSE,
                  inherit.aes = FALSE) +
-      geom_line(data = . %>% filter(Country != input$control), aes(y=Predict), size = 1.5, alpha = alpha) +
       # Counterfactual trend lines
       geom_line(
         data = modcfac(),
@@ -873,14 +876,19 @@ server <- function(input, output, session) {
           x = Time,
           y = Predict,
           # group = interaction(Cat1, Cat2),
-          col = "No Strategy",
+          col = input$main,
+          size = 1,
+          # col = "No Strategy",
+          linetype = input$main,
           fill = NULL
         ),
-        linetype = "longdash",
+        # linetype = "longdash",
         size = 1.5,
         alpha = alpha,
         inherit.aes = FALSE
       ) +
+      # England trend line
+      geom_line(data = . %>% filter(Country != input$control), aes(y=Predict), size = 1.5, alpha = alpha) +
       # Intervention time points
       geom_vline(xintercept = input$int1yr-input$obRange[1]+0.5,
                  linetype = "dotted",
@@ -888,6 +896,13 @@ server <- function(input, output, session) {
       # geom_vline(xintercept = input$int2yr-input$obRange[1]+0.5,
       #            linetype = "dotted",
       #            col = ifelse(input$int2, "#000000CC", NA)) +
+      geom_text(data = NULL,
+                aes(x =  input$int1yr-input$obRange[1]+0.5, y = Inf, label = "Strategy"), 
+                col = "#666666",
+                hjust = -0.2,
+                vjust = 1.5,
+                size = 5,
+                inherit.aes = FALSE) +
       geom_rect(
         xmin = input$int1yr-input$obRange[1]+0.5,
         xmax = input$pi1yr-input$obRange[1]+1.5,
@@ -900,7 +915,7 @@ server <- function(input, output, session) {
       # Display parameters
       theme(panel.background = element_blank(),
             legend.key  = element_blank(),
-            legend.position = "none",
+            legend.position = "bottom",
             panel.grid = element_blank()) +
       ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
@@ -919,8 +934,11 @@ server <- function(input, output, session) {
                    "Scotland" = ScoCol,
                    "England and Wales" = "#A50115",
                    "No Strategy" = "#FFC000"),
-        labels = c("Strategy - Observed", "Wales", "Scotland", "England and Wales", "No Strategy"),
-        aesthetics = c("colour", "fill"))
+        labels = c("England", "Wales", "Scotland", "England and Wales", "No Strategy"),
+        aesthetics = c("colour", "fill")) +
+      scale_linetype_manual(name = "", 
+                            values = c("England" = "longdash"), 
+                            labels = "No Strategy")
   })
   
   
@@ -1001,7 +1019,7 @@ server <- function(input, output, session) {
   })
   
   
-
+  
   
   
   # knit report ------------------------------------------------------------------------------------------------
