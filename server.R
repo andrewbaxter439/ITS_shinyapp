@@ -735,9 +735,23 @@ server <- function(input, output, session) {
     model <- modelGls_null()
     model$call[[2]] <- mod_formula()
     
-    
-    left_join(dfc(), constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null(), mod_formula())) %>%
-      arrange(by = Country) %>%
+    dfc() %>% 
+      bind_rows(tibble(Time = input$int1yr-input$obRange[1]+0.5,
+                Country = c(input$control, input$control, input$main, input$main),
+                England = c(0,0,1,1),
+                Time_Eng   = c(0, 0, input$int1yr-input$obRange[1]+0.5, input$int1yr-input$obRange[1]+0.5),
+                Cat1       = c(1, 0, 1, 0),
+                Trend1     = c(0.5, 0, 0.5, 0),
+                Cat2       = 0,
+                Trend2     = 0,
+                Cat1_Eng   = c(0, 0, 1, 0),
+                Trend1_Eng = c(0, 0, 0.5, 0),
+                Cat2_Eng   = 0,
+                Trend2_Eng = 0,
+                PillScare  = 1)
+                ) %>%
+    left_join(constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null(), mod_formula())) %>%
+      arrange(by = Country, Time, Cat1) %>%
       mutate(Predict = predict(model, newdata = .))# Add Predicts for non-England
   })
   

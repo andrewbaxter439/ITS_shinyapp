@@ -132,7 +132,7 @@ ui <- function(request){
                            ),
                   
                   tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dataframesumm"))
-                  # tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "fulldata"))
+                  # tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dfd"))
       )
     )
   )
