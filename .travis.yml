@@ -1,8 +1,7 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
-dist: trusty
 language: R
 sudo: false
-r: 3.6.3
+r: 4.0.3
 
 install:
   - R -e 'if (system.file(package="packrat") == "") install.packages("packrat")'
