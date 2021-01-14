@@ -44,7 +44,8 @@ constructCIRibbon <- function(newdata, model, formula) {
   vars <- mm %*% vcov(model) %*% t(mm)
   sds <- sqrt(diag(vars))
   
-  df <- df %>% mutate(se = sds,
+  df <- df %>% mutate(
+    #se = sds,
                       lowCI = Predict - 1.96 * sds,
                       HiCI = Predict + 1.96 * sds)
 }
@@ -650,13 +651,13 @@ server <- function(input, output, session) {
     if(input$control == "none"){
       if(input$int2) {
         tibble(
-          Time       = c((startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
+          Time       = c((startYr()-input$obRange[1]+0.5), (startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
           Cat1       = 0,
           Trend1     = 0,
           # Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
           # Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2       = 0,
-          Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr() - input$int2yr + 1)),
+          Trend2     = c(rep(0,(input$int2yr-startYr() +1)), 1:(maxYr() - input$int2yr + 1)),
           PillScare  = 1,
           Value = 1
         ) 
@@ -674,13 +675,13 @@ server <- function(input, output, session) {
     } else {
       if(input$int2) {
         tibble(
-          Time       = c((startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
+          Time       = c((startYr()-input$obRange[1]+0.5), (startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
           England    = 1,
-          Time_Eng   = c((startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
+          Time_Eng   = c((startYr()-input$obRange[1]+0.5), (startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
           Cat1       = 1,
-          Trend1     = c(1:(maxYr()-startYr()+1)),
-          Cat2       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
-          Trend2     = c(rep(0,(input$int2yr-startYr())), 1:(maxYr()-input$int2yr+1)), 
+          Trend1     = c(0.5, 1:(maxYr()-startYr()+1)),
+          Cat2       = c(rep(0,(input$int2yr-startYr()+1)), rep(1,(maxYr()-input$int2yr+1))),
+          Trend2     = c(rep(0,(input$int2yr-startYr()+1)), 1:(maxYr()-input$int2yr+1)), 
           Cat1_Eng   = 0,
           Trend1_Eng = 1,
           # Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
@@ -735,22 +736,33 @@ server <- function(input, output, session) {
     model <- modelGls_null()
     model$call[[2]] <- mod_formula()
     
-    dfc() %>% 
-      bind_rows(tibble(Time = input$int1yr-input$obRange[1]+0.5,
-                Country = c(input$control, input$control, input$main, input$main),
-                England = c(0,0,1,1),
-                Time_Eng   = c(0, 0, input$int1yr-input$obRange[1]+0.5, input$int1yr-input$obRange[1]+0.5),
-                Cat1       = c(1, 0, 1, 0),
-                Trend1     = c(0.5, 0, 0.5, 0),
-                Cat2       = 0,
-                Trend2     = 0,
-                Cat1_Eng   = c(0, 0, 1, 0),
-                Trend1_Eng = c(0, 0, 0.5, 0),
-                Cat2_Eng   = 0,
-                Trend2_Eng = 0,
-                PillScare  = 1)
-                ) %>%
-    left_join(constructCIRibbon((dfc() %>% filter(England==1, Year >= startYr())), modelGls_null(), mod_formula())) %>%
+    new_df <- dfc() %>% 
+      bind_rows(
+        tibble(
+          Year = 1999,
+          Value = 1,
+          Time = input$int1yr-input$obRange[1]+0.5,
+          Country = c(input$control, input$control, input$main, input$main),
+          England = c(0,0,1,1),
+          Time_Eng   = c(0, 0, input$int1yr-input$obRange[1]+0.5, input$int1yr-input$obRange[1]+0.5),
+          Cat1       = c(1, 0, 1, 0),
+          Trend1     = c(0.5, 0, 0.5, 0),
+          Cat2       = 0,
+          Trend2     = 0,
+          Cat1_Eng   = c(0, 0, 1, 0),
+          Trend1_Eng = c(0, 0, 0.5, 0),
+          Cat2_Eng   = 0,
+          Trend2_Eng = 0,
+          PillScare  = 1)
+      )
+    
+    new_df %>% 
+      left_join(constructCIRibbon((new_df %>%
+                                     filter(England==1,
+                                            Time > input$int1yr-input$obRange[1]+0.5,
+                                            # Year > (startYr()-1)
+                                     )
+      ), modelGls_null(), mod_formula())) %>%
       arrange(by = Country, Time, Cat1) %>%
       mutate(Predict = predict(model, newdata = .))# Add Predicts for non-England
   })
@@ -849,8 +861,8 @@ server <- function(input, output, session) {
           # fill= ifelse(input$ribbons,"No Strategy","#00000000"),
           col=NULL
         ),
-        fill= ifelse(input$ribbons,"#dddddd","#ffffff"),
-        alpha=0.5,
+        fill= ifelse(input$ribbons,"#dddddd88","#ffffff00"),
+        # alpha=0.5,
         size = 1,
         show.legend = FALSE,
         inherit.aes = FALSE) +
@@ -859,12 +871,13 @@ server <- function(input, output, session) {
         aes(
           x=Time,
           ymin = lowCI,
-          ymax=HiCI,
+          y = Predict,
+          ymax = HiCI,
           # fill= ifelse(input$ribbons,Country,"#00000000"),
           col=NULL
         ),
-        fill= ifelse(input$ribbons,"#dddddd","#ffffff"),
-        alpha= 0.5,
+        fill= ifelse(input$ribbons,"#dddddd88","#ffffff00"),
+        # alpha= 0.5,
         size = 1,
         show.legend = FALSE) +
       # control data points and trend line
@@ -890,11 +903,18 @@ server <- function(input, output, session) {
           x = Time,
           y = Predict,
           # group = interaction(Cat1, Cat2),
-          col = input$main,
+          # col = input$main,
           size = 1,
           # col = "No Strategy",
-          linetype = input$main,
+          linetype = "No Strategy",
           fill = NULL
+        ),
+        # col = "#CF142B",
+        col = case_when(
+          input$main == "England" ~ "#CF142B",
+          input$main == "Wales" ~ WalCol,
+          input$main == "Scotland" ~ ScoCol,
+          input$main == "England and Wales" ~ "#A50115"
         ),
         # linetype = "longdash",
         size = 1.5,
@@ -930,7 +950,9 @@ server <- function(input, output, session) {
       theme(panel.background = element_blank(),
             legend.key  = element_blank(),
             legend.position = "bottom",
-            panel.grid = element_blank()) +
+            panel.grid.major = element_line(colour = "#e0e0e0"),
+            panel.grid.minor = element_blank(),
+            axis.line = element_line(colour = "#666666")) +
       ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
       # coord_cartesian(ylim = c(0, maxy)) +
@@ -951,8 +973,9 @@ server <- function(input, output, session) {
         labels = c("England", "Wales", "Scotland", "England and Wales", "No Strategy"),
         aesthetics = c("colour", "fill")) +
       scale_linetype_manual(name = "", 
-                            values = c("England" = "longdash"), 
-                            labels = "No Strategy")
+                            values = c("No Strategy" = "longdash", "England" = "solid"), 
+                            labels = c("No Strategy", input$main)
+      )
   })
   
   

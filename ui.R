@@ -131,8 +131,8 @@ ui <- function(request){
                            DT::dataTableOutput("qplus1")
                            ),
                   
-                  tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dataframesumm"))
-                  # tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dfd"))
+                  # tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dataframesumm"))
+                  tabPanel("Dataframe for model", DT::dataTableOutput(outputId = "dfd"))
       )
     )
   )
