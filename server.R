@@ -654,8 +654,6 @@ server <- function(input, output, session) {
           Time       = c((startYr()-input$obRange[1]+0.5), (startYr()-input$obRange[1]+1): (maxYr() - input$obRange[1]+1)),
           Cat1       = 0,
           Trend1     = 0,
-          # Cat1       = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))),
-          # Trend1     = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2       = 0,
           Trend2     = c(rep(0,(input$int2yr-startYr() +1)), 1:(maxYr() - input$int2yr + 1)),
           PillScare  = 1,
@@ -684,8 +682,6 @@ server <- function(input, output, session) {
           Trend2     = c(rep(0,(input$int2yr-startYr()+1)), 1:(maxYr()-input$int2yr+1)), 
           Cat1_Eng   = 0,
           Trend1_Eng = 1,
-          # Cat1_Eng   = c(rep(0,(input$int2yr-startYr())), rep(1,(maxYr()-input$int2yr+1))), 
-          # Trend1_Eng = c(rep(0,(input$int2yr-startYr())), (input$int2yr-startYr()+1):(maxYr()-startYr()+1)),
           Cat2_Eng   = 0,
           Trend2_Eng = 0,
           PillScare  = 1,
@@ -858,7 +854,6 @@ server <- function(input, output, session) {
           ymin = lowCI,
           ymax=HiCI,
           group = interaction(Cat1, Cat2),
-          # fill= ifelse(input$ribbons,"No Strategy","#00000000"),
           col=NULL
         ),
         fill= ifelse(input$ribbons,"#dddddd88","#ffffff00"),
@@ -873,7 +868,6 @@ server <- function(input, output, session) {
           ymin = lowCI,
           y = Predict,
           ymax = HiCI,
-          # fill= ifelse(input$ribbons,Country,"#00000000"),
           col=NULL
         ),
         fill= ifelse(input$ribbons,"#dddddd88","#ffffff00"),
