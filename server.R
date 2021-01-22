@@ -540,9 +540,15 @@ server <- function(input, output, session) {
   
   # Outputs to display -----------------------------------------------------------------------------------------
   
-  rSq <- reactive({signif(cor(dfd()$Predict, dfd()$Value),digits = 3)})
+  rSq <- reactive({
+    df <- dfd() %>% 
+      filter(Time %in% 1:100)
+      
+    signif(cor(df$Predict, df$Value),digits = 3)
+    })
   mspe <- reactive({
     dfd() %>% 
+      filter(Time %in% 1:100) %>%
       mutate(spe = (Predict - Value)**2) %>% 
       summarise(mspe = mean(spe)) %>% 
       pull() %>% 
