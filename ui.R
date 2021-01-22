@@ -33,7 +33,16 @@ ui <- function(request){
                              choices = c("Scotland", "England", "Wales", "England and Wales", "none"),
                              selected = "none"),
                  # sliderInput("null", "null", 1, 10, 5, 1),
-                 uiOutput("dateslider"),
+                 # uiOutput("dateslider"),
+                 sliderInput(
+                   inputId = "obRange",
+                   label = "Select date range to observe",
+                   min = 1992,
+                   max = 2016,
+                   value = c(1992, 2016),
+                   step = 1,
+                   sep=""
+                 ),
                  uiOutput("intyr1slider"),
                  checkboxInput(inputId = "int2",
                                label = "Common shock",
@@ -56,8 +65,8 @@ ui <- function(request){
         ),
         fluidRow(style = "margin: 0px;",
                  h4("Download Graph"),
-                 column(4, numericInput("width", "Width (mm)", 200)),
-                 column(4, numericInput("height", "Height (mm)", 150)),
+                 column(4, numericInput("width", "Width (mm)", 155)),
+                 column(4, numericInput("height", "Height (mm)", 120)),
                  column(4, radioButtons("format", "Format", choices = c("png", "svg"), selected = "png")),
         ),
         fluidRow(style = "margin: 0px;",
@@ -76,7 +85,8 @@ ui <- function(request){
                         downloadButton("downloadReport", label = "Download report")
                  ),
                  column(6,
-                        bookmarkButton("Save analysis", title = "Copy url with current values")
+                        bookmarkButton("Save analysis", title = "Copy url with current values",
+                                       icon = icon("link", lib = "font-awesome"))
                  ),
         )
       ),

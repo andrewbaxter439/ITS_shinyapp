@@ -46,8 +46,8 @@ constructCIRibbon <- function(newdata, model, formula) {
   
   df <- df %>% mutate(
     #se = sds,
-                      lowCI = Predict - 1.96 * sds,
-                      HiCI = Predict + 1.96 * sds)
+    lowCI = Predict - 1.96 * sds,
+    HiCI = Predict + 1.96 * sds)
 }
 
 
@@ -76,9 +76,9 @@ server <- function(input, output, session) {
         #               input$obRange[1], "-",
         #               input$obRange[2],
         #               sep=" ")) +
-        theme(title = element_text(size = 14), 
-              axis.title = element_text(size = 12),
-              legend.text = element_text(size = 12))
+        theme(title = element_text(size = 12), 
+              axis.title = element_text(size = 10),
+              legend.text = element_text(size = 10))
       ggsave(file, graph,
              dpi = 400, units = "mm", width = input$width, height = input$height)
     },
@@ -94,7 +94,10 @@ server <- function(input, output, session) {
       plot <- PlotInput() + theme(text = element_text(size = 16), line = element_blank())
       doc <- read_pptx()
       doc <- add_slide(doc)
-      doc <- ph_with(doc, dml(ggobj = plot), location = ph_location(height = input$height/25.4, width = input$width/25.4))
+      doc <- ph_with(doc, dml(ggobj = plot), location = ph_location(height = input$height/25.4,
+                                                                    width = input$width/25.4,
+                                                                    top = (190.5-input$height)/(2*25.4),
+                                                                    left = (254-input$width)/(2*25.4)))
       print(doc, target = file)
     }
   )
@@ -138,15 +141,23 @@ server <- function(input, output, session) {
     )
   })
   
-  output$dateslider <- renderUI({
-    sliderInput(
+  # output$dateslider <- renderUI({
+  #   sliderInput(
+  #     inputId = "obRange",
+  #     label = "Select date range to observe",
+  #     min = minYr(),
+  #     max = maxYr(),
+  #     value = c(max(minYr(), 1992), maxYr()),
+  #     step = 1,
+  #     sep=""
+  #   )
+  # })
+  
+  observeEvent(minYr(), {
+    updateSliderInput(
       inputId = "obRange",
-      label = "Select date range to observe",
       min = minYr(),
       max = maxYr(),
-      value = c(minYr(), maxYr()),
-      step = 1,
-      sep=""
     )
   })
   
@@ -543,9 +554,9 @@ server <- function(input, output, session) {
   rSq <- reactive({
     df <- dfd() %>% 
       filter(Time %in% 1:100)
-      
+    
     signif(cor(df$Predict, df$Value),digits = 3)
-    })
+  })
   mspe <- reactive({
     dfd() %>% 
       filter(Time %in% 1:100) %>%
@@ -883,7 +894,8 @@ server <- function(input, output, session) {
       # control data points and trend line
       geom_point(data=dfa2()%>%
                    filter(Country == input$control,
-                          Year >= ifelse(input$grey, input$obRange[1], min(dfa2()$Year))),
+                          # Year >= ifelse(input$grey, input$obRange[1], min(dfa2()$Year))
+                   ),
                  aes(Time, Value, col = Country),
                  shape = 3,
                  show.legend = FALSE,
@@ -917,20 +929,21 @@ server <- function(input, output, session) {
           input$main == "England and Wales" ~ "#A50115"
         ),
         # linetype = "longdash",
-        size = 1.5,
+        size = 1,
         alpha = alpha,
         inherit.aes = FALSE
       ) +
       # England trend line
       geom_line(data = . %>% filter(Country != input$control), aes(y=Predict), size = 1.5, alpha = alpha) +
       # Intervention time points
-      geom_vline(xintercept = input$int1yr-input$obRange[1]+0.5,
+      geom_vline(data = tibble(),
+                 xintercept = input$int1yr-input$obRange[1]+0.5,
                  linetype = "dotted",
                  col = "#000000CC") +
       # geom_vline(xintercept = input$int2yr-input$obRange[1]+0.5,
       #            linetype = "dotted",
       #            col = ifelse(input$int2, "#000000CC", NA)) +
-      geom_text(data = NULL,
+      geom_text(data = tibble(),
                 aes(x =  input$int1yr-input$obRange[1]+0.5, y = Inf, label = "Strategy"), 
                 col = "#666666",
                 hjust = -0.2,
@@ -938,6 +951,7 @@ server <- function(input, output, session) {
                 size = 5,
                 inherit.aes = FALSE) +
       geom_rect(
+        data = tibble(),
         xmin = input$int1yr-input$obRange[1]+0.5,
         xmax = input$pi1yr-input$obRange[1]+1.5,
         ymin = 0,
@@ -952,7 +966,10 @@ server <- function(input, output, session) {
             legend.position = "bottom",
             panel.grid.major = element_line(colour = "#e0e0e0"),
             panel.grid.minor = element_blank(),
-            axis.line = element_line(colour = "#666666")) +
+            axis.line = element_line(colour = "#666666"),
+            legend.margin = unit(0, "cm"),
+            legend.text = element_text(size = 12),
+            legend.key.width = unit(1, "cm"))+
       ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
       # coord_cartesian(ylim = c(0, maxy)) +
@@ -964,18 +981,19 @@ server <- function(input, output, session) {
       scale_x_continuous(limits = c(mnlbTm, NA), breaks = seq(mnlbTm, mxlbTm, by=5), labels = seq(minlb, mxlb, by=5)) +
       scale_colour_manual(
         name = "",
-        breaks = c("England", "Wales", "Scotland", "England and Wales", "No Strategy"),
+        breaks = c("England", "England and Wales", "Wales", "Scotland", "No Strategy"),
         values = c("England" = "#CF142B",
+                   "England and Wales" = "#A50115",
                    "Wales" = WalCol,
                    "Scotland" = ScoCol,
-                   "England and Wales" = "#A50115",
                    "No Strategy" = "#FFC000"),
-        labels = c("England", "Wales", "Scotland", "England and Wales", "No Strategy"),
+        labels = c("England", "England and Wales", "Wales", "Scotland", "No Strategy"),
         aesthetics = c("colour", "fill")) +
       scale_linetype_manual(name = "", 
-                            values = c("No Strategy" = "longdash", "England" = "solid"), 
+                            values = c("No Strategy" = "dashed", "England" = "solid"), 
                             labels = c("No Strategy", input$main)
-      )
+      ) +
+      guides(colour = guide_legend(order = 1))
   })
   
   

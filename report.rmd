@@ -5,8 +5,8 @@ output:
   #   theme: readable
   word_document:
     # reference_docx: report_template.docx
-    fig_width: 8
-    fig_height: 6
+    fig_width: 6.1
+    fig_height: 4.7
   github_document: default
 # params:
 #   set_title: none
