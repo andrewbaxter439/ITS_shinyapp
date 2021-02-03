@@ -61,6 +61,19 @@ printCoefficients <- function(model){
 
 server <- function(input, output, session) {
   
+  setBookmarkExclude(c("modelsummary_columns_selected", 
+                       "modelsummary_rows_current",
+                       "modelsummary_cell_clicked",
+                       "modelsummary_rows_all",
+                       "modelsummary_rows_selected",
+                       "modelsummary_state",
+                       "modelsummary_cells_selected",
+                       "modelsummary_search",
+                       "height",
+                       "width",
+                       "format",
+                       "go2graph"))
+  
   # Reactive inputs -------------------------------------------------------------------------------------------
   
   observeEvent(input$go2graph, {
@@ -358,7 +371,8 @@ server <- function(input, output, session) {
       }
     }
     
-    
+    print(summary(model))
+    model
     
   })
   modelGls_null_unused <- reactive({  # add if statements for each model
@@ -367,7 +381,7 @@ server <- function(input, output, session) {
     if (input$control == "none") {       # outer if - with/without control (x1)
       if (input$p == 0 & input$q == 0){  # second if - with or without ARMA correction (x2)
         if (input$int2) {                # innermost if - with or without second intervention (x2x2)
-          gls(
+          mod <- gls(
             Value ~ Time +
               Cat1 +
               Trend1 +
@@ -378,7 +392,7 @@ server <- function(input, output, session) {
             method = "ML"
           )
         } else {
-          gls(
+          mod <- gls(
             # model = model1,
             Value ~ Time +
               Cat1 +
@@ -391,7 +405,7 @@ server <- function(input, output, session) {
         }
       } else {
         if (input$int2) {
-          gls(
+          mod <- gls(
             Value ~ Time +
               Cat1 +
               Trend1 +
@@ -401,7 +415,7 @@ server <- function(input, output, session) {
             correlation = corARMA(p=input$p, q=input$q, form = ~ Time),
             method = "ML"
           )} else {
-            gls(
+            mod <- gls(
               Value ~ Time +
                 Cat1 +
                 Trend1 + 
@@ -415,7 +429,7 @@ server <- function(input, output, session) {
     } else if (input$parallel) {
       if (input$p == 0 & input$q == 0){
         if (input$int2) {
-          gls(
+          mod <- gls(
             Value ~ Time +
               England +
               Cat1 +
@@ -430,7 +444,7 @@ server <- function(input, output, session) {
             correlation = NULL,
             method = "ML"
           )} else {
-            gls(
+            mod <- gls(
               Value ~ Time +
                 England +
                 Cat1 +
@@ -444,7 +458,7 @@ server <- function(input, output, session) {
             )}
       } else {
         if (input$int2) {
-          gls(
+          mod <- gls(
             Value ~ Time +
               England +
               Cat1 +
@@ -459,7 +473,7 @@ server <- function(input, output, session) {
             correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
             method = "ML"
           )} else {
-            gls(
+            mod <- gls(
               Value ~ Time +
                 England +
                 Cat1 +
@@ -475,7 +489,7 @@ server <- function(input, output, session) {
     } else {
       if (input$p == 0 & input$q == 0){
         if (input$int2) {
-          gls(
+          mod <- gls(
             Value ~ Time +
               England +
               Time_Eng +
@@ -491,7 +505,7 @@ server <- function(input, output, session) {
             correlation = NULL,
             method = "ML"
           )} else {
-            gls(
+            mod <- gls(
               Value ~ Time +
                 England +
                 Time_Eng +
@@ -505,7 +519,7 @@ server <- function(input, output, session) {
             )}
       } else {
         if (input$int2) {
-          gls(
+          mod <- gls(
             Value ~ Time +
               England +
               Time_Eng +
@@ -521,7 +535,7 @@ server <- function(input, output, session) {
             correlation = corARMA(p=input$p, q=input$q, form = ~ Time | England),
             method = "ML"
           )} else {
-            gls(
+            mod <- gls(
               Value ~ Time +
                 England +
                 Time_Eng +
@@ -536,6 +550,9 @@ server <- function(input, output, session) {
         
       }
     }
+    
+    print(summary(mod))
+    mod
   })
   
   # Simple linear model ----------------------------------------------------------------------------------------
@@ -557,6 +574,11 @@ server <- function(input, output, session) {
     
     signif(cor(df$Predict, df$Value),digits = 3)
   })
+  
+  logLik <- reactive({
+    modelGls_null()$logLik
+  })
+  
   mspe <- reactive({
     dfd() %>% 
       filter(Time %in% 1:100) %>%
@@ -603,12 +625,12 @@ server <- function(input, output, session) {
                               paste0(interceptName(), " base trend"),
                               paste0(input$main, " difference in rate at ", input$obRange[1]-1),
                               paste0(input$main, " difference in base trend"),
-                              paste0(interceptName(), " change in level at intervention 1"),
-                              paste0(interceptName(), " change in trend at intervention 1"),
-                              paste0(input$main, " difference in level from control at intervention 1"),
-                              paste0(input$main, " difference in trend from control at intervention 1"),
+                              paste0(interceptName(), " change in level at ", input$int1yr),
+                              paste0(interceptName(), " change in trend at ", input$int1yr),
+                              paste0(input$main, " difference in level from control at ", input$int1yr),
+                              paste0(input$main, " difference in trend from control at ", input$int1yr),
                               paste0(interceptName(), " change in level at intervention 2"),
-                              paste0(interceptName(), " change in trend at ", input$int2yr, " common shock"),
+                              paste0("Common change in trend at ", input$int2yr, " shock"),
                               paste0(input$main, " difference in level from control at intervention 2"),
                               paste0(input$main, " difference in trend from control at intervention 2"),
                               "'Pill Scare' corrector"
@@ -967,9 +989,9 @@ server <- function(input, output, session) {
             panel.grid.major = element_line(colour = "#e0e0e0"),
             panel.grid.minor = element_blank(),
             axis.line = element_line(colour = "#666666"),
-            legend.margin = unit(0, "cm"),
+            legend.margin = margin(unit = "cm"),
             legend.text = element_text(size = 12),
-            legend.key.width = unit(1, "cm"))+
+            legend.key.width = unit(1, "cm")) +
       ylab(paste0("Rate of pregnancies to ", input$ages, "s, per 1,000")) +
       xlab("Year") +
       # coord_cartesian(ylim = c(0, maxy)) +
