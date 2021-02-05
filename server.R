@@ -3,10 +3,10 @@ require(broom)
 require(nlme)
 require(car)
 require(svglite)
-require(XLConnect)
 require(officer)
 require(rvg)
 require(DT)
+require(openxlsx)
 
 # Setup data and functions -----------------------------------------------------------------------------------
 
@@ -127,16 +127,17 @@ server <- function(input, output, session) {
   output$dlconfints <- downloadHandler(
     filename = function() {paste0(input$main, " vs ", input$control, " ", input$obRange[1], "-", input$obRange[2], ".xlsx")},
     content = function(file) {
+
       fname <- paste(file,"xlsx",sep=".")
-      wb <- loadWorkbook(fname, create = TRUE)
-      createSheet(wb, name = "model")
-      createSheet(wb, name = "data")
-      createSheet(wb, name = "counterfactual")
-      writeWorksheet(wb, confintervals(), sheet = "model")
-      writeWorksheet(wb, dfd(), sheet = "data")
-      writeWorksheet(wb, modcfac(), sheet = "counterfactual")
-      saveWorkbook(wb)
-      file.rename(fname,file)
+      wb <- createWorkbook("ITS_shinyapp", "ITS results")
+      addWorksheet(wb, sheetName = "model")
+      addWorksheet(wb, sheetName = "data")
+      addWorksheet(wb, sheetName = "counterfactual")
+      writeData(wb, confintervals(), sheet = "model")
+      writeData(wb, dfd(), sheet = "data")
+      writeData(wb, modcfac(), sheet = "counterfactual")
+      saveWorkbook(wb, file = file)
+      
     },
     contentType = "file/xlsx"
   )
@@ -242,7 +243,7 @@ server <- function(input, output, session) {
   
   # Dataframe setup --------------------------------------------------------------------------------------------
   
-  load("data/all_uk_rates.rdata")
+  load("data/all_uk_rates_u.rdata")
   # output$fulldata <- DT::renderDataTable(modcfac())
   output$fulldata <- DT::renderDataTable(all_UK_rates[[input$ages]], options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
@@ -909,7 +910,8 @@ server <- function(input, output, session) {
           ymax = HiCI,
           col=NULL
         ),
-        fill= ifelse(input$ribbons,"#dddddd88","#ffffff00"),
+        fill= NA,  # no confints for England trend
+        # fill= ifelse(input$ribbons,"#dddddd88","#ffffff00"),
         # alpha= 0.5,
         size = 1,
         show.legend = FALSE) +
