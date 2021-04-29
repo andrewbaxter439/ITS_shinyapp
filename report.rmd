@@ -17,7 +17,7 @@ output:
 ### Output graph and model fit
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(dpi=300)
+knitr::opts_chunk$set(dpi=400)
 ```
 
 ```{r plot, echo = FALSE, messages = FALSE, warning = FALSE}

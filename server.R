@@ -623,7 +623,7 @@ server <- function(input, output, session) {
                               "Trend2_Eng",
                               "PillScare"),
                      lab2 = c(paste0(interceptName(), " (est) rate at ", input$obRange[1]-1),
-                              paste0(interceptName(), " base trend"),
+                              paste0(interceptName(), " pre-intervention trend"),
                               paste0(input$main, " difference in rate at ", input$obRange[1]-1),
                               paste0(input$main, " difference in base trend"),
                               paste0(interceptName(), " change in level at ", input$int1yr),
@@ -668,14 +668,14 @@ server <- function(input, output, session) {
   
   # Outputting tables ------------------------------------------------------------------------------------------
   
-  output$confint<- DT::renderDataTable(confintervals() %>% select(-Std.Error), 
+  output$confint<- DT::renderDataTable(confintervals() %>% select(-`Standard Error`), 
                                        options = list(searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
   confintervals <- reactive({
     modelTable() %>%
-      select(Coefficient, Value, Std.Error) %>%
-      bind_cols(tibble("Lower CI" = round(confint(modelGls_null())[ ,1], 3),
-                       "Upper CI" = round(confint(modelGls_null())[ ,2], 3)))
+      select(Coefficient, Estimate = Value, `Standard Error` = Std.Error) %>%
+      bind_cols(tibble("Lower 95% CI" = round(confint(modelGls_null())[ ,1], 3),
+                       "Upper 95% CI" = round(confint(modelGls_null())[ ,2], 3)))
   })
   
   
@@ -873,8 +873,8 @@ server <- function(input, output, session) {
     mxlbTm <- unique(dfc()[which(dfc()$Year==mxlb),]$Time)
     
     if (input$grey){
-      ScoCol <- "grey"
-      WalCol <- "grey"
+      ScoCol <- "#666666"
+      WalCol <- "#666666"
     }
     
     dfd()  %>%
@@ -967,13 +967,19 @@ server <- function(input, output, session) {
       # geom_vline(xintercept = input$int2yr-input$obRange[1]+0.5,
       #            linetype = "dotted",
       #            col = ifelse(input$int2, "#000000CC", NA)) +
-      geom_text(data = tibble(),
-                aes(x =  input$int1yr-input$obRange[1]+0.5, y = Inf, label = "Strategy"), 
-                col = "#666666",
-                hjust = -0.2,
-                vjust = 1.5,
-                size = 5,
-                inherit.aes = FALSE) +
+      geom_text(
+        data = tibble(),
+        aes(
+          x =  input$int1yr - input$obRange[1] + 1,
+          y = Inf,
+          label = "1999 Strategy launch"
+        ),
+        col = "#666666",
+        hjust = 0,
+        vjust = 1.5,
+        size = 5,
+        inherit.aes = FALSE
+      ) +
       geom_rect(
         data = tibble(),
         xmin = input$int1yr-input$obRange[1]+0.5,
