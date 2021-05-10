@@ -173,38 +173,27 @@ server <- function(input, output, session) {
       min = minYr(),
       max = maxYr(),
     )
+    
+    updateSliderInput(
+      inputId = "int2yr",
+      min = startYr()+2,
+      max = maxYr()-2
+    )
+    
+    updateSliderInput(
+      inputId = "int1yr",
+                      min = minYr()+2,
+                      max = maxYr()-2
+      )
+    
+    updateSliderInput(
+      inputId = "pi1yr",
+      min = input$int1yr,
+      max = maxYr()-1,
+      value = input$int1yr+1
+    )
   })
   
-  output$intyr1slider <- renderUI({
-    sliderInput(inputId = "int1yr",
-                label = "Beginning of intervention 1:",
-                min = minYr()+2,
-                max = maxYr()-2,
-                step = 1,
-                sep="",
-                value = 1999)
-  })
-  
-  
-  output$intyr2slider <- renderUI ({
-    sliderInput(inputId = "int2yr",
-                label = "Post-intervention common shock:",
-                min = startYr()+2,
-                max = maxYr()-2,
-                step = 1,
-                sep="",
-                value = 2008)
-  })
-  
-  output$piyr1slider <- renderUI ({
-    sliderInput(inputId = "pi1yr",
-                label = "Intervention 1 phase-in period:",
-                min = input$int1yr,
-                max = maxYr()-1,
-                step = 1,
-                sep="",
-                value = input$int1yr+1)
-  })
   
   # Start and end years ----------------------------------------------------------------------------------------
   
