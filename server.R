@@ -1123,4 +1123,16 @@ server <- function(input, output, session) {
   )
   
   
+
+# attempt at testing non-zero ---------------------------------------------
+
+  observeEvent(modelGls_null(), {
+    updateSelectInput(session, "coef_compare", choices = printCoefficients(modelGls_null())$Coefficient)
+    # updateSliderInput(session, "coef_slider", min = -1, max = 1)
+  })
+
+  output$nz_pval <- renderText({
+    signif(linearHypothesis(modelGls_null(), paste0(input$coef_compare, " = ", input$coef_slider))[2,3], 2)
+  })
+  
 }

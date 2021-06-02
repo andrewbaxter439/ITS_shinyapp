@@ -144,6 +144,22 @@ ui <- function(request){
                              DT::dataTableOutput((outputId = "confint")),
                              # textOutput("form2"),
                              br(),
+                             div(
+                               div(style = "display:inline-block; vertical-align: middle", "The probability of these observations if "),
+                               div(style = "display:inline-block; vertical-align: middle", selectInput("coef_compare", " ", choices = "choose a model...", width = "150px")),
+                               div(style = "display:inline-block; vertical-align: middle", " is "),
+                               div(style = "display:inline-block; vertical-align: baseline", numericInput(
+                                 "coef_slider",
+                                 " ",
+                                 # min = -1,
+                                 # max = 1,
+                                 value = 0,
+                                 width = "100px"
+                               )),
+                               div(style = "display:inline-block; vertical-align: middle", " is "),
+                               div(style = "display:inline-block; vertical-align: middle", textOutput("nz_pval")),
+                             ), 
+                             br(),
                              downloadButton("dlconfints")
                     ),
                     
