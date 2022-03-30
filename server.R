@@ -46,8 +46,8 @@ constructCIRibbon <- function(newdata, model, formula) {
   
   df <- df %>% mutate(
     #se = sds,
-    lowCI = Predict - 1.96 * sds,
-    HiCI = Predict + 1.96 * sds)
+    lowCI = Predict - qt(0.975, model$dims$N - model$dims$p) * sds,
+    HiCI = Predict + qt(0.975, model$dims$N - model$dims$p) * sds)
 }
 
 
@@ -1007,10 +1007,12 @@ server <- function(input, output, session) {
                    "Scotland" = ScoCol,
                    "No Strategy" = "#FFC000"),
         labels = c("England", "England and Wales", "Wales", "Scotland", "No Strategy"),
-        aesthetics = c("colour", "fill")) +
+        aesthetics = c("colour", "fill"),
+        limits = force) +
       scale_linetype_manual(name = "", 
                             values = c("No Strategy" = "dashed", "England" = "solid"), 
-                            labels = c("No Strategy", input$main)
+                            labels = c("No Strategy", input$main),
+                            limits = force
       ) +
       guides(colour = guide_legend(order = 1))
   })
